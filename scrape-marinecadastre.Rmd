@@ -55,24 +55,20 @@ Scrape datasets with links for downloads and metadata from [marinecadastre.gov/d
 - [rvest: easy web scraping with R | RStudio Blog](https://blog.rstudio.org/2014/11/24/rvest-easy-web-scraping-with-r/)
 
 ```{r scrape}
-library(tidyverse)
-library(rvest)
-library(webshot)
-library(stringr)
-library(DT)
-library(glue)
-library(dplyr)
-library(tibble)
+librarian::shelf(
+  DT, dplyr, glue, purrr, readr, rvest, stringr, tibble)
+  # tidyverse, webshot)
 
-url_mc       <- 'https://marinecadastre.gov/data/'
-dir_mc       <- '/share/data/marinecadastre.gov'
-csv_mc       <- file.path(dir_mc, '_datasets.csv')
-csv_mc_paths <- file.path(dir_mc, '_datasets_paths.csv')
-csv_mc_gh    <- "/share/github/apps/data/datasets_marinecadastre.gov.csv"
+url_mc       <- "https://marinecadastre.gov/data/"
+dir_pfx      <- "/Users/bbest/My Drive/projects/offhab_data"
+dir_mc       <- glue("{dir_pfx}/marinecadastre.gov")
+csv_mc       <- glue("{dir_mc}_datasets_{Sys.Date()}.csv")
+csv_mc_paths <- glue("{dir_mc}_datasets_paths.csv")
+csv_mc_gh    <- glue("{dir_mc}_datasets_marinecadastre.gov.csv")
 
 dir.create(dir_mc, showWarnings = F)
 
-get_page = function(url, js='scrape.js', html='scraped.html'){
+get_page = function(url, js='mc_scrape.js', html='mc_scraped.html'){
   # url = url_mc; js='scrape.js'; html='scraped.html'
   
   # write javascript for feeding to phantomjs for obtaining rendered html
@@ -90,13 +86,12 @@ get_page = function(url, js='scrape.js', html='scraped.html'){
     }, 5000);
   }
   "), js)
-  #bin_phantom <- webshot:::find_phantom(quiet = T)
+  bin_phantom <- webshot:::find_phantom(quiet = T)
   # cd /share/github/apps; /usr/local/bin/phantomjs scrape.js
   #system("./phantomjs scrape_dow_30.js") ## apply scraping 
   #webshot:::phantom_run(js)
-  
-  bin_phantom <- "/usr/local/bin/phantomjs"
-  system(glue("{bin_phantom} {js}"))
+  #bin_phantom <- "/usr/local/bin/phantomjs"
+  system(glue("'{bin_phantom}' {js}"))
   return(html)
 }
 
@@ -108,11 +103,10 @@ get_page = function(url, js='scrape.js', html='scraped.html'){
 # read_html(ct$eval(gsub('document.write','',emailjs))) %>% 
 #  html_text()
 
-
 if (!file.exists(csv_mc)){
-  # h = get_page(url_mc) %>%
-  #   read_html()
-  h = read_html(html)
+  h = get_page(url_mc) %>%
+    read_html()
+  # h = read_html(url_mc)
   #unlink(c('scrape.js','scraped.html'))
   nodes = h %>% html_nodes('div.mc-panel-layer')
   
@@ -131,18 +125,23 @@ if (!file.exists(csv_mc)){
     downloads_piped = map_chr(downloads, function(x) paste(x, collapse='|')),
     downloads_n     = map_int(downloads, length),
     metadatas_piped = map_chr(metadatas, function(x) paste(x, collapse='|')),
-    metadatas_n     = map_int(metadatas, length))
+    metadatas_n     = map_int(metadatas, length)) %>% 
+    select(-downloads, -metadatas) %>% 
+    rename(
+      downloads = downloads_piped,
+      metadatas = metadatas_piped)
     
   #write_csv(d %>% select(-node, -downloads, -metadatas), mc_csv)
-  write_csv(d %>% select(-downloads, -metadatas), csv_mc)
+  # write_csv(d %>% select(-downloads, -metadatas), csv_mc)
+  write_csv(d, csv_mc)
   #file.copy(csv_mc, csv_mc2)
-  
-  file.copy(csv_mc, csv_mc_gh)
+  # file.copy(csv_mc, csv_mc_gh)
 }
 
 # show parsed dataset info ----
 read_csv(csv_mc) %>%
-  select(-description) %>%
+  select(-description,-downloads, -metadatas) %>%
+  # select(-description) %>%
   datatable(options = list(pageLength = 50))
 ```
 
@@ -152,8 +151,8 @@ read_csv(csv_mc) %>%
 ```{r download}
 mc = read_csv(csv_mc) %>%
   mutate(
-    downloads = str_split(downloads_piped, fixed('|')),
-    metadatas = str_split(metadatas_piped, fixed('|')))
+    downloads = str_split(downloads, fixed('|')),
+    metadatas = str_split(metadatas, fixed('|')))
 
 for (i in 1:nrow(mc)){ # i=1
   dir_i = file.path(dir_mc, str_replace_all(mc$title[i], '[:/]','-'))

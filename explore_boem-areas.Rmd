@@ -1,0 +1,148 @@
+---
+title: "BOEM Renewable Energy Areas"
+author: "Ben Best"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T, warning = F, message = F)
+```
+
+Downloaded geodatabase from [Renewable Energy GIS Data \| Bureau of Ocean Energy Management](https://www.boem.gov/renewable-energy/mapping-and-data/renewable-energy-gis-data):
+
+-   **Renewable Energy Leases and Planning Areas**\
+    Boundaries of renewable energy lease areas, wind planning areas, and marine hydrokinetic planning areas.
+
+```{r}
+librarian::shelf(
+  dplyr, DT, glue, mapview, rgdal, sf)
+mapviewOptions(fgb = F)
+
+dir_data <- "/Users/bbest/My Drive/projects/offhab_data"
+gdb <- glue("{dir_data}/boem.gov/BOEMWindLayers_4Download.gdb")
+
+lyrs <- rgdal::ogrListLayers(gdb)
+tibble(
+  layers = lyrs) %>% 
+  datatable(caption = "Layers in BOEM Renewable Energy Leases and Planning Areas geodatabase.")
+```
+
+# GIS Data
+
+## All Layers Map
+
+```{r}
+mapview(read_sf(gdb, lyrs[1]), layer.name = lyrs[1]) + 
+  mapview(read_sf(gdb, lyrs[2]), layer.name = lyrs[2]) +
+  mapview(read_sf(gdb, lyrs[3]), layer.name = lyrs[3]) +
+  mapview(read_sf(gdb, lyrs[4]), layer.name = lyrs[4]) +
+  mapview(read_sf(gdb, lyrs[5]), layer.name = lyrs[5])
+```
+
+```{r}
+i = 1
+```
+
+## `r glue("{i}. {lyrs[i]}")`
+
+```{r}
+f <- read_sf(gdb, lyrs[i])
+mapview(f, layer.name = lyrs[i])
+datatable(f %>% st_drop_geometry())
+```
+
+```{r}
+i = 2
+```
+
+## `r glue("{i}. {lyrs[i]}")`
+
+```{r}
+f <- read_sf(gdb, lyrs[i])
+mapview(f, layer.name = lyrs[i])
+datatable(f %>% st_drop_geometry())
+```
+
+```{r}
+i = 3
+```
+
+## `r glue("{i}. {lyrs[i]}")`
+
+```{r}
+f <- read_sf(gdb, lyrs[i])
+mapview(f, layer.name = lyrs[i])
+datatable(f %>% st_drop_geometry())
+```
+
+```{r}
+i = 4
+```
+
+## `r glue("{i}. {lyrs[i]}")`
+
+```{r}
+f <- read_sf(gdb, lyrs[i])
+mapview(f, layer.name = lyrs[i])
+datatable(f %>% st_drop_geometry())
+```
+
+```{r}
+i = 5
+```
+
+## `r glue("{i}. {lyrs[i]}")`
+
+```{r}
+f <- read_sf(gdb, lyrs[i])
+mapview(f, layer.name = lyrs[i])
+datatable(f %>% st_drop_geometry())
+```
+
+# State Activities
+
+https://www.boem.gov/renewable-energy/state-activities
+
+## Gulf of Mexico
+
+* [Gulf of Mexico Activities | Bureau of Ocean Energy Management](https://www.boem.gov/renewable-energy/state-activities/gulf-mexico-activities)
+  ![](https://www.boem.gov/sites/default/files/styles/max_width_400px/public/images/wea_map.jpg?itok=_pjMn3iQ)
+  * [Gulf of Mexico Draft WEAs | Bureau of Ocean Energy Management](https://www.boem.gov/renewable-energy/state-activities/gulf-mexico-draft-weas)
+    * [WEA Option I & M Shape Files with Metadata](https://www.boem.gov/node/21661)
+
+```{r}
+dir_shps <- glue("{dir_data}/boem.gov/WEA_option_I_M_shapes_w_metadata")
+
+lyrs <- rgdal::ogrListLayers(dir_shps)
+
+f1 <- read_sf(dir_shps, lyrs[1])
+f2 <- read_sf(dir_shps, lyrs[2])
+f <- rbind(f1, f2)
+
+mapview(f, layer.name = "Options")
+```
+
+# Regions for contextual comparison
+
+```{r}
+
+dir_areas <- glue("{dir_data}/marinecadastre.gov/2019-2024 Draft Proposed Program Areas")
+
+ak  <- read_sf(glue("{dir_areas}/ak-5yr-2019-2024_dir/2019-2024DPPAreas_AK.shp"))
+atl <- read_sf(glue("{dir_areas}/atl-5yr-2019-2024_dir/2019-2024DPPAreas_Atlantic.shp"))
+gom <- read_sf(glue("{dir_areas}/Gom_5yr_2019_2024_dir/2019-2024DPPAreas_GOM.shp"))
+pac <- read_sf(glue("{dir_areas}/pac-5yr-2019-2024_dir/2019-2024DPPAreas_Pac.shp"))
+
+mapview(ak) + 
+  mapview(atl) + 
+  mapview(gom) + 
+  mapview(pac)
+```
+

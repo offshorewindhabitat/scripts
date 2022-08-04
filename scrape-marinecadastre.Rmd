@@ -154,7 +154,7 @@ mc = read_csv(csv_mc) %>%
     downloads = str_split(downloads, fixed('|')),
     metadatas = str_split(metadatas, fixed('|')))
 
-for (i in 1:nrow(mc)){ # i=1
+for (i in 1:nrow(mc)){ # i=39
   dir_i = file.path(dir_mc, str_replace_all(mc$title[i], '[:/]','-'))
   
   if (dir.exists(dir_i)){

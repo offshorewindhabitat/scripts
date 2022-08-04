@@ -10,7 +10,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = F, warning = F)
+knitr::opts_chunk$set(eval = F, echo = TRUE, message = F, warning = F)
 ```
 
 ## Install phantomjs on ubuntu
@@ -41,20 +41,15 @@ export OPENSSL_CONF=/etc/ssl/
 phantomjs --version
 ```
 
-
-
 Now, It should have PhantomJS properly on your system.
 
-
-
 ## Scrape for Datasets
-
 
 Scrape datasets with links for downloads and metadata from [marinecadastre.gov/data](https://marinecadastre.gov/data/) using the R package `rvest` (see `vignette("selectorgadget")`).
 
 - [rvest: easy web scraping with R | RStudio Blog](https://blog.rstudio.org/2014/11/24/rvest-easy-web-scraping-with-r/)
 
-```{r scrape}
+```{r init, eval=T}
 librarian::shelf(
   DT, dplyr, glue, purrr, readr, rvest, stringr, tibble)
   # tidyverse, webshot)
@@ -67,7 +62,9 @@ csv_mc_paths <- glue("{dir_mc}_datasets_paths.csv")
 csv_mc_gh    <- glue("{dir_mc}_datasets_marinecadastre.gov.csv")
 
 dir.create(dir_mc, showWarnings = F)
+```
 
+```{r scrape}
 get_page = function(url, js='mc_scrape.js', html='mc_scraped.html'){
   # url = url_mc; js='scrape.js'; html='scraped.html'
   
@@ -137,10 +134,11 @@ if (!file.exists(csv_mc)){
   #file.copy(csv_mc, csv_mc2)
   # file.copy(csv_mc, csv_mc_gh)
 }
+```
 
-# show parsed dataset info ----
+```{r, eval=T}
 read_csv(csv_mc) %>%
-  select(-description,-downloads, -metadatas) %>%
+  select(-downloads, -metadatas) %>%
   # select(-description) %>%
   datatable(options = list(pageLength = 50))
 ```

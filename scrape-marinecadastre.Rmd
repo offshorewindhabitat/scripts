@@ -51,15 +51,19 @@ Scrape datasets with links for downloads and metadata from [marinecadastre.gov/d
 
 ```{r init, eval=T}
 librarian::shelf(
-  DT, dplyr, glue, purrr, readr, rvest, stringr, tibble)
+  DT, dplyr, fs, glue, purrr, readr, rvest, stringr, tibble)
   # tidyverse, webshot)
 
-url_mc       <- "https://marinecadastre.gov/data/"
-dir_pfx      <- "/Users/bbest/My Drive/projects/offhab_data"
-dir_mc       <- glue("{dir_pfx}/marinecadastre.gov")
-csv_mc       <- glue("{dir_mc}_datasets_{Sys.Date()}.csv")
-csv_mc_paths <- glue("{dir_mc}_datasets_paths.csv")
-csv_mc_gh    <- glue("{dir_mc}_datasets_marinecadastre.gov.csv")
+url_mc        <- "https://marinecadastre.gov/data/"
+dir_pfx       <- "/Users/bbest/My Drive/projects/offhab/data"
+dir_mc        <- glue("{dir_pfx}/marinecadastre.gov")
+# date_mc      <- Sys.Date()
+date_mc       <- as.Date("2022-08-04")
+mc_pfx        <- glue("{dir_mc}_datasets_{date_mc}")
+mc_csv        <- glue("{mc_pfx}.csv")
+mc_paths_csv  <- glue("{mc_pfx}_paths.csv")
+mc_themes_csv <- glue("{mc_pfx}_themes.csv")
+mc_nothemes_csv <- glue("{mc_pfx}_no-themes.csv")
 
 dir.create(dir_mc, showWarnings = F)
 ```
@@ -100,7 +104,7 @@ get_page = function(url, js='mc_scrape.js', html='mc_scraped.html'){
 # read_html(ct$eval(gsub('document.write','',emailjs))) %>% 
 #  html_text()
 
-if (!file.exists(csv_mc)){
+if (!file.exists(mc_csv)){
   h = get_page(url_mc) %>%
     read_html()
   # h = read_html(url_mc)
@@ -129,28 +133,155 @@ if (!file.exists(csv_mc)){
       metadatas = metadatas_piped)
     
   #write_csv(d %>% select(-node, -downloads, -metadatas), mc_csv)
-  # write_csv(d %>% select(-downloads, -metadatas), csv_mc)
-  write_csv(d, csv_mc)
-  #file.copy(csv_mc, csv_mc2)
-  # file.copy(csv_mc, csv_mc_gh)
+  # write_csv(d %>% select(-downloads, -metadatas), mc_csv)
+  write_csv(d, mc_csv)
+  #file.copy(mc_csv, mc_csv2)
+  # file.copy(mc_csv, mc_csv_gh)
 }
 ```
 
 ```{r, eval=T}
-read_csv(csv_mc) %>%
+read_csv(mc_csv) %>%
   select(-downloads, -metadatas) %>%
   # select(-description) %>%
   datatable(options = list(pageLength = 50))
 ```
 
+## Get Themes with Selenium
+
+* [Basics • RSelenium](https://docs.ropensci.org/RSelenium/articles/basics.html)
+
+In Terminal, with Docker on:
+
+```bash
+docker run -d -p 4445:4444 --name selenium selenium/standalone-firefox:2.53.1
+```
+
+```{r, eval=F}
+librarian::shelf(
+  RSelenium)
+
+dir.create("tmp", showWarnings = F)
+
+rd <- remoteDriver(
+  remoteServerAddr = "localhost",
+  port = 4445L,
+  browserName = "firefox")
+
+rd$open()
+rd$navigate("https://marinecadastre.gov/data/")
+rd$screenshot(display = T)
+e_show_themes <- rd$findElement(
+  "css selector",
+  '[ng-show|="themeTags.length > limit"]')
+e_show_themes$clickElement()
+rd$screenshot(display = T)
+e_themes <- rd$findElements(
+  "css selector",
+  '[ng-click^="toggleThemeLayer(themeTag)"]')
+for (e in e_themes){ # e = e_themes[[1]]
+  theme <- e$getElementText()[[1]]
+  
+  e$clickElement()
+  rd$screenshot(display = T)
+  
+  # save to txt
+  src <- rd$getPageSource()[[1]]
+  htm <- glue("tmp/{theme}.html")
+  csv <- glue("tmp/{theme}.csv")
+  
+  writeLines(src, htm)
+  nodes = read_html(htm) %>% 
+    html_nodes('div.mc-panel-layer')
+  d = tibble(
+    title  = nodes %>% html_nodes('h4') %>% html_text(trim=T))
+  write_csv(d, csv)
+
+  e$clickElement()
+  rd$screenshot(display = T)
+}
+
+rd$close
+```
+
+In Terminal, turn off Docker container:
+
+```bash
+docker stop selenium
+```
+
+```{r}
+redo = F
+
+d_mc <- read_csv(mc_csv)
+if (!"id" %in% names(d_mc)){
+  d_mc <- d_mc %>% 
+    arrange(title) %>% 
+    rowid_to_column("id")
+  write_csv(d_mc, mc_csv)
+}
+
+d_themes <- tibble(
+  id = integer(0),
+  theme = character(0))
+
+themes <- list.files("tmp", "\\.csv$") %>% 
+  str_replace("\\.csv$", "")
+
+themes %>% paste(collapse = "\n") %>% cat()
+for (thm in themes){ # thm = themes[1]
+  d_themes <- bind_rows(
+    d_themes,
+    d_mc %>% 
+      inner_join(
+        read_csv(glue("tmp/{thm}.csv")) %>% 
+          mutate(
+            theme = thm), by = "title") %>% 
+      select(id, theme))
+}
+write_csv(d_themes, mc_themes_csv)
+
+if (!"themes" %in% names(d_mc) | redo){
+  d_mc <- d_mc %>% 
+    left_join(
+      d_themes %>% 
+        arrange(id, theme) %>% 
+        group_by(id) %>% 
+        summarize(
+          themes = paste(theme, collapse = "; ")),
+      by = "id")
+  write_csv(d_mc, mc_csv)
+  
+  d_mc %>% 
+    filter(is.na(themes)) %>% 
+    write_csv(mc_nothemes_csv)
+    
+  mc_themes_csv
+}
+d_mc        <- read_csv(mc_csv)
+d_mc_themes <- read_csv(mc_themes_csv)
+
+datatable(d_mc %>% select(id, title, themes))
+```
+
+
+## Choose Datasets
+
+* [r - DT collapse all row groups by default - Stack Overflow](https://stackoverflow.com/questions/66761304/dt-collapse-all-row-groups-by-default/66774002#66774002)
+* [javascript - Collapse rowGroup Shiny - Stack Overflow](https://stackoverflow.com/questions/59896704/collapse-rowgroup-shiny)
+* [Collapse rowGroup · Issue #759 · rstudio/DT](https://github.com/rstudio/DT/issues/759#issuecomment-578854246)
+* [DataTables Extensions](https://rstudio.github.io/DT/extensions.html)
 
 ## Download Datasets
 
 ```{r download}
-mc = read_csv(csv_mc) %>%
+mc = read_csv(mc_csv) %>%
   mutate(
     downloads = str_split(downloads, fixed('|')),
     metadatas = str_split(metadatas, fixed('|')))
+
+# "BOEM Block Aliquots"
+# "Outer Continental Shelf Lands Act"
 
 for (i in 1:nrow(mc)){ # i=39
   dir_i = file.path(dir_mc, str_replace_all(mc$title[i], '[:/]','-'))
@@ -183,7 +314,7 @@ for (i in 1:nrow(mc)){ # i=39
 }
 
 # show size of files ----
-d = read_csv(csv_mc) %>%
+d = read_csv(mc_csv) %>%
   mutate(
     dir_path = file.path(dir_mc, str_replace_all(title, '[:/]','-')),
     dir_base = basename(dir_path),
@@ -193,7 +324,7 @@ d = read_csv(csv_mc) %>%
       }),
     dir_size_mb  = round(dir_size_mb, digits=2))
 
-write_csv(d, csv_mc_paths)
+write_csv(d, mc_paths_csv)
 
 d %>%
   select(title, dir_base, dir_size_mb) %>%

@@ -272,22 +272,27 @@ datatable(d_mc %>% select(id, title, themes))
 * [Collapse rowGroup · Issue #759 · rstudio/DT](https://github.com/rstudio/DT/issues/759#issuecomment-578854246)
 * [DataTables Extensions](https://rstudio.github.io/DT/extensions.html)
 
+- "BOEM Block Aliquots"
+- "Outer Continental Shelf Lands Act"
+
 ## Download Datasets
 
 ```{r download}
 mc = read_csv(mc_csv) %>%
   mutate(
     downloads = str_split(downloads, fixed('|')),
-    metadatas = str_split(metadatas, fixed('|')))
+    metadatas = str_split(metadatas, fixed('|'))) %>% 
+  filter(
+    title %in% c(
+      "Benthic Cover",
+      "Essential Fish Habitat (EFH)",
+      "Habitat Areas of Particular Concern"))
 
-# "BOEM Block Aliquots"
-# "Outer Continental Shelf Lands Act"
-
-for (i in 1:nrow(mc)){ # i=39
+for (i in 1:nrow(mc)){ # i=1
   dir_i = file.path(dir_mc, str_replace_all(mc$title[i], '[:/]','-'))
   
   if (dir.exists(dir_i)){
-    #cat(sprintf('  Output directory exists, so skipping\n'))
+    message('  Output directory exists, so skipping\n')
     next
   }
   

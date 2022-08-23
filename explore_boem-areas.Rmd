@@ -25,7 +25,7 @@ librarian::shelf(
   dplyr, DT, glue, mapview, rgdal, sf)
 mapviewOptions(fgb = F)
 
-dir_data <- "/Users/bbest/My Drive/projects/offhab_data"
+dir_data <- "/Users/bbest/My Drive/projects/offhab/data"
 gdb <- glue("{dir_data}/boem.gov/BOEMWindLayers_4Download.gdb")
 
 lyrs <- rgdal::ogrListLayers(gdb)
@@ -131,6 +131,9 @@ mapview(f, layer.name = "Options")
 
 # Regions for contextual comparison
 
+Compare to regions: “2019-2024 Draft Proposed Program Areas”
+
+
 ```{r}
 
 dir_areas <- glue("{dir_data}/marinecadastre.gov/2019-2024 Draft Proposed Program Areas")
@@ -144,5 +147,34 @@ mapview(ak) +
   mapview(atl) + 
   mapview(gom) + 
   mapview(pac)
+```
+
+
+# Datasets
+
+## Benthic Cover
+
+```{r}
+gdb <- glue("{dir_data}/marinecadastre.gov/Benthic Cover/BenthicCover_dir/BenthicCover/BenthicCover.gdb")
+
+lyrs <- rgdal::ogrListLayers(gdb)
+tibble(
+  layers = lyrs) %>% 
+  datatable(caption = "Layers in Benthic Cover geodatabase.")
+```
+
+## Essential Fish Habitat
+
+```{r}
+efh_shp <- glue("{dir_data}/marinecadastre.gov/Essential Fish Habitat (EFH)/nationwide_efh_dir/nationwide_efh.shp")
+efh <- read_sf(efh_shp)
+
+efh %>% 
+  st_drop_geometry() %>% 
+  select(1:5) %>% 
+  datatable()
+
+# mapview(efh) # too big
+
 ```
 

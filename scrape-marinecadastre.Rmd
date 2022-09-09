@@ -64,6 +64,7 @@ mc_csv        <- glue("{mc_pfx}.csv")
 mc_paths_csv  <- glue("{mc_pfx}_paths.csv")
 mc_themes_csv <- glue("{mc_pfx}_themes.csv")
 mc_nothemes_csv <- glue("{mc_pfx}_no-themes.csv")
+mc_supplthemes_csv <- glue("{mc_pfx}_themes-supplemental.csv")
 
 dir.create(dir_mc, showWarnings = F)
 ```
@@ -260,6 +261,7 @@ if (!"themes" %in% names(d_mc) | redo){
 }
 d_mc        <- read_csv(mc_csv)
 d_mc_themes <- read_csv(mc_themes_csv)
+d_mc_themsuppl <- read_csv(mc_supplthemes_csv)
 
 datatable(d_mc %>% select(id, title, themes))
 ```

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" ng-app="registryApp" class="ng-scope"><head><style type="text/css">@charset "UTF-8";[ng\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>
+     <!-- Set base URL for all paths and links to be root relative.
+Ignore once set on all three tiers -->
+<base href="/" />
+     <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1" name="viewport" />
+<meta content="K1DsftUuLlqqk78dMT6UK3wi7zl-5wLaTaGEgWzOlyg" name="google-site-verification" />
+
+
+<!-- Bootstrap -->
+<link type="text/css" rel="stylesheet" href="css/bootstrap.css" />
+<link type="text/css" rel="stylesheet" href="css/core.css" />
+<link type="text/css" rel="stylesheet" href="css/wp-theme.css" />
+<link charset="utf-8" type="text/css" href="css/droidsans.css" rel="stylesheet" />
+<link charset="utf-8" type="text/css" href="css/droidserif.css" rel="stylesheet" />
+<link href="css/font-awesome.min.css" rel="stylesheet" />
+<link href="css/core.css" rel="stylesheet" />
+<link href="css/home-illustration.css" rel="stylesheet" />
+
+<!-- Favicon -->
+<link href="../img/favicon.ico" type="image/x-icon" rel="icon" />
+
+<!-- Google Analytics -->
+<script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/destination?id=G-KWPVVFFZ4Y&amp;l=dataLayer&amp;cx=c"></script><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-425MYCDN11&amp;l=dataLayer&amp;cx=c"></script><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-KWPVVFFZ4Y&amp;l=dataLayer&amp;cx=c"></script><script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-NBGBBMH"></script><script async="" src="https://www.google-analytics.com/analytics.js"></script><script src="https://coast.noaa.gov/js/federated-analytics.js" type="text/javascript"></script><script src="https://coast.noaa.gov/js/gsa_Universal-Federated-Analytics-Min-4-0.js?agency=DOC&amp;sub-agency=NOAA&amp;pua=UA-45260734-1" id="_fed_an_ua_tag"></script><script src="https://coast.noaa.gov/js/lastupdated/timestamp.js?1660969300789"></script><script src="https://coast.noaa.gov/js/google-tag-manager/index.js?1660969300790"></script><script src="https://www.googletagmanager.com/gtag/js?id=G-KWPVVFFZ4Y"></script>
+
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+
+
+<!--[if IE]>
+<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+       <link rel="stylesheet" type="text/css" href="css/ie9.css" />
+<![endif]-->
+
+<link href="css/ie-home-illustration.css" rel="stylesheet" />
+   <title>MarineCadastre.gov</title>
+     
+<link type="text/css" rel="stylesheet" href="/js/httpsBanner.css" /></head>
+<body id="registry"><iframe width="0" height="0" src="https://www.googletagmanager.com/ns.html?id=GTM-NBGBBMH" style="display: none; visibility: hidden;"></iframe>
+<header id="banner">
+
+<!--Logo/Menu-->
+<!--Logo/Menu-->
+      <nav>
+          <div class="container">
+        <ul class="nav pull-right">
+          <li><a href="data">Data</a></li>
+          <li><a href="viewers">Maps</a></li>          
+          <li><a href="uses/">Uses</a></li><!--<li><a href="news2/list.php?filter=uses">Uses</a></li>-->
+          <li><a href="tools/">Tools</a></li>
+          <li><a href="news/">News</a></li><!--<li><a href="news2/">News</a></li> -->
+          <li><a href="about/">About</a></li>
+          <li id="commentmenuitem"><a data-target="#commentmodal" data-toggle="modal" href="#">Contact</a></li>
+        </ul>
+        <h3 class="textlogo"><a title="Back to MarineCadastre Homepage" href="/">MarineCadastre.gov</a></h3>
+      </div>
+      </nav>
+<!--Logo/Menu--> 
+
+
+<div class="container">     
+      <div class="row">
+        <div class="sidemasthead">
+  <div class="col-md-7">
+      <h1>Data Registry</h1>
+      <p>The MarineCadastre.gov Data Registry allows users to filter data by provider, thematic category, geographic region, and service type.</p>
+      <p> </p>
+      <p>View <a href="https://marinecadastre.gov/news/load.php?url=posts/new-and-updated-datasets.html">latest data updates</a>.</p>
+  </div>    
+
+  <div class="col-md-5">
+      <h3>Get Vessel Traffic Data</h3>
+      <p><a href="https://marinecadastre.gov/accessais/">Launch AccessAIS</a><br />
+      View and download by user-defined dates and areas</p>
+      <p><a href="https://marinecadastre.gov/ais/">Download Bulk Data</a><br />
+      Download by predefined dates and areas</p>
+  </div>
+
+</div>
+</div>
+</div><!--container-->
+</header>
+<div ng-controller="layerCtrl" class="ng-scope">
+<div data-offset-top="350" data-spy="affix" class="mc-registry-toolbar affix-top">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="input-group">            
+          <input type="text" ng-model="query" ng-change="search()" placeholder="Search" class="form-control ng-pristine ng-untouched ng-valid ng-empty" />
+          <span class="input-group-btn">
+            <button ng-click="search()" ng-submit="search()" type="button" class="btn btn-default"><i class="fa fa-search"></i></button>
+          </span>
+          </div>
+        </div>
+        <div class="col-md-4">
+        </div>
+        <div class="col-md-4 pull-right">
+          <button class="btn btn-default" type="button">
+            <a class="help-button" target="_blank" href="https://marinecadastre.gov/SiteCollectionDocuments/HowTo_DataRegistry.pdf"><i class="glyphicon glyphicon-question-sign"></i> Help</a>
+          </button> 
+          <div class="btn-group pull-right">
+            <button data-toggle="dropdown" class="btn btn-default dropdown-toggle mymapresult" type="button">
+              <i class="glyphicon glyphicon-star"></i> My Map <strong class="ng-binding">0</strong>
+            </button>        
+            <div role="menu" class="dropdown-menu map-dropdown">              
+              <div class="cart-items">
+                <!-- ngRepeat: saved in savedLayers -->
+              </div>
+            <div ng-show="savedLayers.length &gt;= 1" class="cart-options text-center ng-hide">
+            <div style="padding-bottom:10px;" class="row">
+              <div class="col-md-6"><a class="btn btn-info btn-sm btn-block" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?&amp;extent=-100,40&amp;level=4&amp;urls=" href="http://www.arcgis.com/home/webmap/viewer.html?&amp;extent=-100,40&amp;level=4&amp;urls=">Open in ArcGIS.com</a></div>
+              <div class="col-md-6">
+              <a class="btn btn-info btn-sm btn-block" target="_blank" ng-href="https://marinecadastre.gov/nationalviewer/#//40.1786097044826,-80.99/4/esriocean" href="https://marinecadastre.gov/nationalviewer/#//40.1786097044826,-80.99/4/esriocean">Open in National Viewer</a>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+              <a class="btn btn-danger btn-sm btn-block" target="_blank" ng-click="clearCart(layer)">Clear Layers</a></div></div>
+               
+            </div>
+            <li ng-show="savedLayers.length &lt; 1">
+              <a>Your map is empty.</a> 
+            </li>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!--mc-registry-toolbar-->
+
+<!--Primary Container-->
+<div class="container">
+<div class="row">
+<!--MainPage Content-->
+  <div class="main">
+    
+   
+
+      <div class="col-md-3">
+        <div class="panel mc-panel-filter">
+          <div class="panel-heading panel-displaying">
+            <p>Currently displaying</p>
+            <h3 class="ng-binding">3 Datasets</h3>
+            <a class="btn btn-danger" target="_blank" ng-click="clearFilters();">Clear Filters</a>
+          </div>
+          <div ng-init="limit = 5" class="panel-body">
+            <h5>Theme</h5>
+            <!-- ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Bathymetry</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Birds</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Corals</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding mc-active-tag">Economics</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Federal GeoRegulations</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Fish</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Jurisdictions and Boundaries</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Marine Habitat</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Marine Mammals</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Ocean Uses and Planning Areas</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Physical and Oceanographic</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit -->
+            <p ng-show="themeTags.length &gt; limit" class="ng-hide"><a class="showmorefilter" ng-click="limit = 100" href="">Show More</a></p>
+            <h5>Region</h5>
+            <!-- ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Alaska</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Caribbean</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">East Coast</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Great Lakes</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Gulf of Mexico</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">National</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Pacific Islands</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">West Coast</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit -->
+            <p ng-show="geoTags.length &gt; limit" class="ng-hide"><a class="showmorefilter" ng-click="limit = 100" href="">Show More</a></p>
+            <h5>Provider</h5>
+            <!-- ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Bureau of Indian Affairs</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Bureau of Ocean Energy Management</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">DOE National Renewable Energy Laboratory</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Department of Energy Office of Energy Efficiency and Renewable Energy</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Duke University</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Federal Emergency Management Agency</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Marine-Life Data and Analysis Team</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">MarineCadastre.gov</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National Centers for Coastal Ocean Science</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National Centers for Environmental Information</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National Geophysical Data Center</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National MPA Center</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National Marine Fisheries Service</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National Marine Sanctuary Program</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National Weather Service</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA Northeast Fisheries Science Center</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA Office for Coastal Management</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA Office of Coast Survey</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA Office of Response and Restoration</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Pacific Marine and Estuarine Fish Habitat Partnership</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Army Corps of Engineers</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Census Bureau</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Coast Guard</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Department of Defense</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Department of the Treasury</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Environmental Protection Agency</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Fish and Wildlife Service</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Geological Survey</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Integrated Ocean Observing System</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. National Park Service</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Navy</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">University of New Hampshire</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit -->
+            <p ng-show=" providerTags.length &gt; limit" class="ng-hide"><a class="showmorefilter" ng-click="limit = 100" href="">Show More</a></p>
+            <h5>Service Type</h5>
+            <!-- ngRepeat: serviceTag in serviceTags | limitTo: limit --><p ng-repeat="serviceTag in serviceTags | limitTo: limit" class="ng-scope"><a ng-click="toggleServiceLayer(serviceTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Esri GeoServices (cached)</a></p><!-- end ngRepeat: serviceTag in serviceTags | limitTo: limit --><p ng-repeat="serviceTag in serviceTags | limitTo: limit" class="ng-scope"><a ng-click="toggleServiceLayer(serviceTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Esri GeoServices (dynamic)</a></p><!-- end ngRepeat: serviceTag in serviceTags | limitTo: limit --><p ng-repeat="serviceTag in serviceTags | limitTo: limit" class="ng-scope"><a ng-click="toggleServiceLayer(serviceTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Esri GeoServices (feature)</a></p><!-- end ngRepeat: serviceTag in serviceTags | limitTo: limit --><p ng-repeat="serviceTag in serviceTags | limitTo: limit" class="ng-scope"><a ng-click="toggleServiceLayer(serviceTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">OGC WMS</a></p><!-- end ngRepeat: serviceTag in serviceTags | limitTo: limit --><p ng-repeat="serviceTag in serviceTags | limitTo: limit" class="ng-scope"><a ng-click="toggleServiceLayer(serviceTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">OGC WMTS</a></p><!-- end ngRepeat: serviceTag in serviceTags | limitTo: limit -->
+          </div>
+        </div>
+      </div>
+
+
+      <div class="col-md-9">
+        <!-- ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">Census Statistics - County <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.census.gov/" class="ng-binding ng-scope">U.S. Census Bureau</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Census Statistics - County" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://marinecadastre.gov/downloads/data/mc/CensusStatistics.zip" class="ng-binding" href="https://marinecadastre.gov/downloads/data/mc/CensusStatistics.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://coast.noaa.gov/arcgis/rest/services/OceanReports/CoastalCensusStatistics_Counties/MapServer" class="ng-binding" href="https://coast.noaa.gov/arcgis/rest/services/OceanReports/CoastalCensusStatistics_Counties/MapServer">Esri GeoServices (cached)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.fisheries.noaa.gov/inport/item/66125" class="ng-binding" href="https://www.fisheries.noaa.gov/inport/item/66125"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://coast.noaa.gov/arcgis/rest/services/OceanReports/CoastalCensusStatistics_Counties/MapServer&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://coast.noaa.gov/arcgis/rest/services/OceanReports/CoastalCensusStatistics_Counties/MapServer&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            Data from the 2010 Decennial Census and the 2012 - 2016 five year estimates from the American Community Survey were joined to TIGER/Line shapefiles of US coastal counties produced by the Census Bureau to produce this visual representation of select census statistics. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">Census Statistics - State <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.census.gov/" class="ng-binding ng-scope">U.S. Census Bureau</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Census Statistics - State" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://marinecadastre.gov/downloads/data/mc/CensusStatistics.zip" class="ng-binding" href="https://marinecadastre.gov/downloads/data/mc/CensusStatistics.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://coast.noaa.gov/arcgis/rest/services/OceanReports/CoastalCensusStatistics_States/MapServer" class="ng-binding" href="https://coast.noaa.gov/arcgis/rest/services/OceanReports/CoastalCensusStatistics_States/MapServer">Esri GeoServices (cached)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.fisheries.noaa.gov/inport/item/66184" class="ng-binding" href="https://www.fisheries.noaa.gov/inport/item/66184"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://coast.noaa.gov/arcgis/rest/services/OceanReports/CoastalCensusStatistics_States/MapServer&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://coast.noaa.gov/arcgis/rest/services/OceanReports/CoastalCensusStatistics_States/MapServer&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            Data from the 2010 Decennial Census and the 2012 - 2016 five year estimates from the American Community Survey were joined to TIGER/Line shapefiles produced by the Census Bureau to produce this visual representation of select census statistics. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">Opportunity Zones <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="https://home.treasury.gov/" class="ng-binding ng-scope">U.S. Department of the Treasury</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Opportunity Zones" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://www.cdfifund.gov/sites/cdfi/files/documents/opportunity-zones=8764.-9-10-2019.zip" class="ng-binding" href="https://www.cdfifund.gov/sites/cdfi/files/documents/opportunity-zones=8764.-9-10-2019.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/Opportunity_Zones/FeatureServer/0" class="ng-binding" href="https://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/Opportunity_Zones/FeatureServer/0">Esri GeoServices (feature)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://cimsprodprep.cdfifund.gov/CIMS4/apps/pn-nmtc/index.aspx#?tool=layers&amp;visible=OPPORTUNITYZONE" class="ng-binding" href="https://cimsprodprep.cdfifund.gov/CIMS4/apps/pn-nmtc/index.aspx#?tool=layers&amp;visible=OPPORTUNITYZONE">Source Map</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.cdfifund.gov/sites/cdfi/files/documents/opportunity-zones=8764.-9-10-2019.zip" class="ng-binding" href="https://www.cdfifund.gov/sites/cdfi/files/documents/opportunity-zones=8764.-9-10-2019.zip"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/Opportunity_Zones/FeatureServer/0&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/Opportunity_Zones/FeatureServer/0&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            Opportunity zones are economically-distressed communities where new investments, under certain conditions, may be eligible for preferential tax treatment. Localities qualify as opportunity zones if they have been nominated for that designation by the state and that nomination has been certified by the Secretary of the U.S. Treasury via his delegation of authority to the Internal Revenue Service. Opportunity zones were added to the tax code by the Tax Cuts and Jobs Act on December 22, 2017. Opportunity zones may help determine where resources should be allocated for onshore infrastructure related to ocean activities, such as pipelines, transformer yards, and power facilities. This data set displays qualified opportunity zones at the U.S. Census Tract level. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) -->
+      </div>
+  </div><!--Main Page-->
+  </div><!--row-->
+</div><!--container-->
+</div><!--NGLAYER CONTROLLER-->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="partnership">
+        <p>A Collaboration of</p>
+        <a title="Bureau of Ocean Management Homepage" href="http://www.boem.gov/" class="boempart"><img alt="BOEM Logo" src="img/boem.png" /></a>
+        <a title="NOAA Office for Coastal Management Homepage" href="https://coast.noaa.gov/" class="noaapart"><img alt="NOAA Logo" src="img/noaa.png" /></a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <p class="text-center">
+          <a target="_blank" alt="Facebook Icon" href="http://www.facebook.com/pages/Multipurpose-Marine-Cadastre/123284794440133"><i aria-hidden="true" class="fa fa-facebook-square fa-3x"></i></a>
+          <a target="_blank" alt="Twitter Icon" href="http://twitter.com/#%21/marinecadastre"><i aria-hidden="true" class="fa fa-twitter-square fa-3x"></i></a>
+          
+          <a alt="Newsletter Icon" href="subscribe/"><i aria-hidden="true" class="fa fa-at fa-3x"></i></a>
+          <br />
+          <a href="http://oceanservice.noaa.gov/">National Ocean Service</a> |
+          <a href="https://coast.noaa.gov/PrivacyPolicy/privacyPolicy.html">Privacy Policy</a>
+          | <a href="about/disclaimer.html">Link Disclaimer</a> |
+          <a target="_blank" href="https://coast.noaa.gov/survey.html">Customer Satisfaction Survey</a>
+          | <a href="mailto:info@marinecadastre.gov">Contact Us</a> <br />
+          Web Site Owner:
+          <a href="https://coast.noaa.gov/" class="noaapart">NOAA Office for Coastal Management</a>
+          | Last Modified: <span id="ocm_frontend_last_modified">08/19/2022</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+<!-- AngularJS -->
+<script src="lib/angular.min.js"></script>
+<script src="lib/angular-route.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/controllers.js"></script>
+<script src="js/services.js"></script>
+<script src="js/directives.js"></script>
+<script src="js/filters.js"></script>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="js/bootstrap.min.js"></script>
+<script src="lib/ui-bootstrap.min.js" type="text/javascript"></script>
+<!-- analytics -->
+<script src="lib/angulartics.js"></script>
+<script src="lib/angulartics-google-analytics.js"></script>
+
+
+<style type="text/css">
+  .footer-fix:last-of-type {
+    margin-bottom: 100px;
+  }
+</style> 
+
+<script src="../lib/angulartics.js"></script>
+<script src="../lib/angulartics-google-analytics.js"></script>
+  
+
+</body><canvas id="fxdriver-screenshot-canvas" style="display: none;" width="1211" height="2640"></canvas></html>

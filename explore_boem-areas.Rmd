@@ -32,6 +32,52 @@ lyrs <- rgdal::ogrListLayers(gdb)
 tibble(
   layers = lyrs) %>% 
   datatable(caption = "Layers in BOEM Renewable Energy Leases and Planning Areas geodatabase.")
+
+boem_lns_pln <- read_sf(gdb, lyrs[4]) %>% 
+  mutate(
+    src    = lyrs[4],
+    fld1 = "PROTRACTION_NUMBER",
+    val1 = PROTRACTION_NUMBER) %>% 
+  filter(PROTRACTION_NUMBER != "<Null>") %>%  # Gulf of Mexico Call Area
+  select(src, fld1, val1) 
+# mapview(boem_lns_pln)
+
+boem_lns_lse <- read_sf(gdb, lyrs[5]) %>% 
+  mutate(
+    src  = lyrs[5],
+    fld1 = "LEASE_NUMBER",
+    val1 = LEASE_NUMBER) %>% 
+  select(src, fld1, val1) 
+mapview(boem_lns_lse)
+
+boem_lns <- rbind(
+  boem_lns_pln,
+  boem_lns_lse)
+
+boem_shp_lse <- read_sf(gdb, lyrs[2]) %>% 
+  filter(LEASE_TYPE == "Commercial") %>% 
+  mutate(
+    type = "Commercial Lease",
+    src  = lyrs[2],
+    fld1 = "LEASE_NUMBER",
+    val1 = LEASE_NUMBER) %>% 
+  select(type, src, fld1, val1)
+# mapview(boem_shp_lse)
+
+boem_shp_pln <- read_sf(gdb, lyrs[3]) %>% 
+  mutate(
+    type = ifelse(CATEGORY1 == "PSN", "Proposed Sale Notice", "Call Area"),
+    src  = lyrs[4],
+    fld1 = "PROTRACTION_NUMBER",
+    val1 = PROTRACTION_NUMBER) %>% 
+  filter(PROTRACTION_NUMBER != "<Null>") %>%  # Gulf of Mexico Call Area
+  select(type, src, fld1, val1)
+# mapview(boem_lns_pln)
+
+boem_shp <- rbind(
+  boem_shp_lse,
+  boem_shp_pln) %>% 
+  filter(str_trim(val1) != "")
 ```
 
 # GIS Data
@@ -149,6 +195,142 @@ mapview(ak) +
   mapview(pac)
 ```
 
+# Regions for contextual comparison
+
+Compare to regions: “2019-2024 Draft Proposed Program Areas”
+
+```{r}
+librarian::shelf(
+  ggplot2, ggrepel,
+  rnaturalearth, rnaturalearthdata, ropensci/rnaturalearthhires,
+  purrr, stringr, tidyr)
+
+sf::sf_use_s2(FALSE) # https://stackoverflow.com/questions/68478179/how-to-resolve-spherical-geometry-failures-when-joining-spatial-data
+ply_rgns <- rbind(
+  atl,
+  gom %>% 
+    select(-(setdiff(names(gom), names(atl)))),
+  pac) %>% 
+  st_transform(4326)
+
+# x <- st_intersection(
+#   boem_lns, 
+#   ply_rgns %>% 
+#     select(MMS_REGION, MMS_PLAN_A, RESA_summa))
+# mapview(x, zcol="RESA_summa")
+
+world  <- ne_countries(scale = "medium", returnclass = "sf")
+states <- ne_states("united states of america", returnclass = "sf")
+
+b <- st_bbox(ply_rgns)
+
+rgns <- c(
+  "Washington/Oregon",       # light green
+  "Southern California",     # dark green
+  "North Atlantic",          # light blue
+  "Mid Atlantic",            # dark blue
+  "Central Gulf of Mexico")  # pink
+rgn_pal <- RColorBrewer::brewer.pal(
+  length(rgns), "Paired")
+names(rgn_pal) = rgns
+
+ply_rgns <- ply_rgns %>% 
+  mutate(
+    rgn    = RESA_summa,
+    assess = rgn %in% rgns)
+# mapview(ply_rgns, zcol="rgn")
+
+rgns_lbl <- ply_rgns %>% 
+  filter(assess) %>% 
+  mutate(
+    geometry = st_centroid(geometry),
+    lon = st_coordinates(geometry)[,"X"],
+    lat = st_coordinates(geometry)[,"Y"])
+
+ggplot(data = world) +
+  geom_sf() +
+  geom_sf(data = states) +
+  geom_sf(
+    data = ply_rgns, 
+    aes(
+      fill  = rgn)) +
+  scale_fill_manual(values=rgn_pal) +
+  geom_label_repel(
+    data = rgns_lbl, 
+    aes(
+      x = lon, y = lat,
+      label = RESA_summa), # MMS_PLAN_A
+    label.size = NA, 
+    alpha = 0.6, 
+    seed = 42) +
+  geom_label_repel(
+    data = rgns_lbl, 
+    aes(
+      x = lon, y = lat,
+      label = rgn), # MMS_PLAN_A
+    label.size = NA, 
+    alpha = 1, 
+    fill = NA,
+    seed = 42) + 
+  coord_sf(
+    xlim = c(b["xmin"], b["xmax"]), 
+    ylim = c(b["ymin"], b["ymax"]), expand = T) +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank())
+ggsave(
+  "figures/rgns.png",
+  width  = 8.29,
+  height = 3.86,
+  units  = "in")
+```
+
+# Regional Zooms
+
+```{r}
+plot_rgn <- function(rgn){
+  # rgn = rgns[5]
+  rgn_ply <- ply_rgns %>% 
+    filter(rgn == !!rgn)
+  rgn_col <- rgn_pal[[rgn]]
+  
+  b <- st_bbox(rgn_ply)
+  
+  p <- ggplot(data = world) +
+    geom_sf() +
+    geom_sf(data = states) +
+    geom_sf(
+      data = rgn_ply, 
+      color = NA,
+      fill  = rgn_col,
+      alpha = 0.3,
+      lwd = 1.5) +
+    geom_sf(
+      data = boem_shp, 
+      aes(fill = type),
+      lwd = 0.1) +
+    coord_sf(
+      xlim = c(b["xmin"], b["xmax"]), 
+      ylim = c(b["ymin"], b["ymax"]), expand = T) +
+    theme(
+      # legend.position = "none",
+      legend.position = c(0.3, 0.2),
+      legend.title    = element_blank(),
+      legend.text     = element_text(size=4),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank())
+  print(p)
+  ggsave(
+    glue("figures/rgn_{str_replace(rgn, '/', '-')}.png"),
+    width  = 4.145*2,
+    height = 1.93*2,
+    units  = "in")
+}
+# plot_rgn("Washington/Oregon")
+plot_rgn(rgns[1])
+# sapply(rgns, plot_rgn)
+```
 
 # Datasets
 

@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" ng-app="registryApp" class="ng-scope"><head><style type="text/css">@charset "UTF-8";[ng\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>
+     <!-- Set base URL for all paths and links to be root relative.
+Ignore once set on all three tiers -->
+<base href="/" />
+     <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1" name="viewport" />
+<meta content="K1DsftUuLlqqk78dMT6UK3wi7zl-5wLaTaGEgWzOlyg" name="google-site-verification" />
+
+
+<!-- Bootstrap -->
+<link type="text/css" rel="stylesheet" href="css/bootstrap.css" />
+<link type="text/css" rel="stylesheet" href="css/core.css" />
+<link type="text/css" rel="stylesheet" href="css/wp-theme.css" />
+<link charset="utf-8" type="text/css" href="css/droidsans.css" rel="stylesheet" />
+<link charset="utf-8" type="text/css" href="css/droidserif.css" rel="stylesheet" />
+<link href="css/font-awesome.min.css" rel="stylesheet" />
+<link href="css/core.css" rel="stylesheet" />
+<link href="css/home-illustration.css" rel="stylesheet" />
+
+<!-- Favicon -->
+<link href="../img/favicon.ico" type="image/x-icon" rel="icon" />
+
+<!-- Google Analytics -->
+<script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/destination?id=G-KWPVVFFZ4Y&amp;l=dataLayer&amp;cx=c"></script><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-425MYCDN11&amp;l=dataLayer&amp;cx=c"></script><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-KWPVVFFZ4Y&amp;l=dataLayer&amp;cx=c"></script><script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-NBGBBMH"></script><script async="" src="https://www.google-analytics.com/analytics.js"></script><script src="https://coast.noaa.gov/js/federated-analytics.js" type="text/javascript"></script><script src="https://coast.noaa.gov/js/gsa_Universal-Federated-Analytics-Min-4-0.js?agency=DOC&amp;sub-agency=NOAA&amp;pua=UA-45260734-1" id="_fed_an_ua_tag"></script><script src="https://coast.noaa.gov/js/lastupdated/timestamp.js?1660969300789"></script><script src="https://coast.noaa.gov/js/google-tag-manager/index.js?1660969300790"></script><script src="https://www.googletagmanager.com/gtag/js?id=G-KWPVVFFZ4Y"></script>
+
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+
+
+<!--[if IE]>
+<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+       <link rel="stylesheet" type="text/css" href="css/ie9.css" />
+<![endif]-->
+
+<link href="css/ie-home-illustration.css" rel="stylesheet" />
+   <title>MarineCadastre.gov</title>
+     
+<link type="text/css" rel="stylesheet" href="/js/httpsBanner.css" /></head>
+<body id="registry"><iframe width="0" height="0" src="https://www.googletagmanager.com/ns.html?id=GTM-NBGBBMH" style="display: none; visibility: hidden;"></iframe>
+<header id="banner">
+
+<!--Logo/Menu-->
+<!--Logo/Menu-->
+      <nav>
+          <div class="container">
+        <ul class="nav pull-right">
+          <li><a href="data">Data</a></li>
+          <li><a href="viewers">Maps</a></li>          
+          <li><a href="uses/">Uses</a></li><!--<li><a href="news2/list.php?filter=uses">Uses</a></li>-->
+          <li><a href="tools/">Tools</a></li>
+          <li><a href="news/">News</a></li><!--<li><a href="news2/">News</a></li> -->
+          <li><a href="about/">About</a></li>
+          <li id="commentmenuitem"><a data-target="#commentmodal" data-toggle="modal" href="#">Contact</a></li>
+        </ul>
+        <h3 class="textlogo"><a title="Back to MarineCadastre Homepage" href="/">MarineCadastre.gov</a></h3>
+      </div>
+      </nav>
+<!--Logo/Menu--> 
+
+
+<div class="container">     
+      <div class="row">
+        <div class="sidemasthead">
+  <div class="col-md-7">
+      <h1>Data Registry</h1>
+      <p>The MarineCadastre.gov Data Registry allows users to filter data by provider, thematic category, geographic region, and service type.</p>
+      <p> </p>
+      <p>View <a href="https://marinecadastre.gov/news/load.php?url=posts/new-and-updated-datasets.html">latest data updates</a>.</p>
+  </div>    
+
+  <div class="col-md-5">
+      <h3>Get Vessel Traffic Data</h3>
+      <p><a href="https://marinecadastre.gov/accessais/">Launch AccessAIS</a><br />
+      View and download by user-defined dates and areas</p>
+      <p><a href="https://marinecadastre.gov/ais/">Download Bulk Data</a><br />
+      Download by predefined dates and areas</p>
+  </div>
+
+</div>
+</div>
+</div><!--container-->
+</header>
+<div ng-controller="layerCtrl" class="ng-scope">
+<div data-offset-top="350" data-spy="affix" class="mc-registry-toolbar affix-top">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="input-group">            
+          <input type="text" ng-model="query" ng-change="search()" placeholder="Search" class="form-control ng-pristine ng-untouched ng-valid ng-empty" />
+          <span class="input-group-btn">
+            <button ng-click="search()" ng-submit="search()" type="button" class="btn btn-default"><i class="fa fa-search"></i></button>
+          </span>
+          </div>
+        </div>
+        <div class="col-md-4">
+        </div>
+        <div class="col-md-4 pull-right">
+          <button class="btn btn-default" type="button">
+            <a class="help-button" target="_blank" href="https://marinecadastre.gov/SiteCollectionDocuments/HowTo_DataRegistry.pdf"><i class="glyphicon glyphicon-question-sign"></i> Help</a>
+          </button> 
+          <div class="btn-group pull-right">
+            <button data-toggle="dropdown" class="btn btn-default dropdown-toggle mymapresult" type="button">
+              <i class="glyphicon glyphicon-star"></i> My Map <strong class="ng-binding">0</strong>
+            </button>        
+            <div role="menu" class="dropdown-menu map-dropdown">              
+              <div class="cart-items">
+                <!-- ngRepeat: saved in savedLayers -->
+              </div>
+            <div ng-show="savedLayers.length &gt;= 1" class="cart-options text-center ng-hide">
+            <div style="padding-bottom:10px;" class="row">
+              <div class="col-md-6"><a class="btn btn-info btn-sm btn-block" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?&amp;extent=-100,40&amp;level=4&amp;urls=" href="http://www.arcgis.com/home/webmap/viewer.html?&amp;extent=-100,40&amp;level=4&amp;urls=">Open in ArcGIS.com</a></div>
+              <div class="col-md-6">
+              <a class="btn btn-info btn-sm btn-block" target="_blank" ng-href="https://marinecadastre.gov/nationalviewer/#//40.1786097044826,-80.99/4/esriocean" href="https://marinecadastre.gov/nationalviewer/#//40.1786097044826,-80.99/4/esriocean">Open in National Viewer</a>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+              <a class="btn btn-danger btn-sm btn-block" target="_blank" ng-click="clearCart(layer)">Clear Layers</a></div></div>
+               
+            </div>
+            <li ng-show="savedLayers.length &lt; 1">
+              <a>Your map is empty.</a> 
+            </li>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!--mc-registry-toolbar-->
+
+<!--Primary Container-->
+<div class="container">
+<div class="row">
+<!--MainPage Content-->
+  <div class="main">
+    
+   
+
+      <div class="col-md-3">
+        <div class="panel mc-panel-filter">
+          <div class="panel-heading panel-displaying">
+            <p>Currently displaying</p>
+            <h3 class="ng-binding">21 Datasets</h3>
+            <a class="btn btn-danger" target="_blank" ng-click="clearFilters();">Clear Filters</a>
+          </div>
+          <div ng-init="limit = 5" class="panel-body">
+            <h5>Theme</h5>
+            <!-- ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Bathymetry</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Birds</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Corals</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Economics</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Federal GeoRegulations</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding mc-active-tag">Fish</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Jurisdictions and Boundaries</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Marine Habitat</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Marine Mammals</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Ocean Uses and Planning Areas</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit --><p ng-repeat="themeTag in themeTags | limitTo: limit" class="ng-scope"><a ng-click="toggleThemeLayer(themeTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Physical and Oceanographic</a></p><!-- end ngRepeat: themeTag in themeTags | limitTo: limit -->
+            <p ng-show="themeTags.length &gt; limit" class="ng-hide"><a class="showmorefilter" ng-click="limit = 100" href="">Show More</a></p>
+            <h5>Region</h5>
+            <!-- ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Alaska</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Caribbean</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">East Coast</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Great Lakes</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Gulf of Mexico</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">National</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Pacific Islands</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit --><p ng-repeat="geoTag in geoTags | limitTo: limit" class="ng-scope"><a ng-click="toggleGeoLayer(geoTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">West Coast</a></p><!-- end ngRepeat: geoTag in geoTags | limitTo: limit -->
+            <p ng-show="geoTags.length &gt; limit" class="ng-hide"><a class="showmorefilter" ng-click="limit = 100" href="">Show More</a></p>
+            <h5>Provider</h5>
+            <!-- ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Bureau of Indian Affairs</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Bureau of Ocean Energy Management</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">DOE National Renewable Energy Laboratory</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Department of Energy Office of Energy Efficiency and Renewable Energy</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Duke University</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Federal Emergency Management Agency</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Marine-Life Data and Analysis Team</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">MarineCadastre.gov</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National Centers for Coastal Ocean Science</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National Centers for Environmental Information</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National Geophysical Data Center</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National MPA Center</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National Marine Fisheries Service</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National Marine Sanctuary Program</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA National Weather Service</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA Northeast Fisheries Science Center</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA Office for Coastal Management</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA Office of Coast Survey</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">NOAA Office of Response and Restoration</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Pacific Marine and Estuarine Fish Habitat Partnership</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Army Corps of Engineers</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Census Bureau</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Coast Guard</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Department of Defense</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Department of the Treasury</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Environmental Protection Agency</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Fish and Wildlife Service</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Geological Survey</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Integrated Ocean Observing System</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. National Park Service</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">U.S. Navy</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit --><p ng-repeat="providerTag in providerTags | limitTo: limit" class="ng-scope"><a ng-click="toggleProviderLayer(providerTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">University of New Hampshire</a></p><!-- end ngRepeat: providerTag in providerTags | limitTo: limit -->
+            <p ng-show=" providerTags.length &gt; limit" class="ng-hide"><a class="showmorefilter" ng-click="limit = 100" href="">Show More</a></p>
+            <h5>Service Type</h5>
+            <!-- ngRepeat: serviceTag in serviceTags | limitTo: limit --><p ng-repeat="serviceTag in serviceTags | limitTo: limit" class="ng-scope"><a ng-click="toggleServiceLayer(serviceTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Esri GeoServices (cached)</a></p><!-- end ngRepeat: serviceTag in serviceTags | limitTo: limit --><p ng-repeat="serviceTag in serviceTags | limitTo: limit" class="ng-scope"><a ng-click="toggleServiceLayer(serviceTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Esri GeoServices (dynamic)</a></p><!-- end ngRepeat: serviceTag in serviceTags | limitTo: limit --><p ng-repeat="serviceTag in serviceTags | limitTo: limit" class="ng-scope"><a ng-click="toggleServiceLayer(serviceTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">Esri GeoServices (feature)</a></p><!-- end ngRepeat: serviceTag in serviceTags | limitTo: limit --><p ng-repeat="serviceTag in serviceTags | limitTo: limit" class="ng-scope"><a ng-click="toggleServiceLayer(serviceTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">OGC WMS</a></p><!-- end ngRepeat: serviceTag in serviceTags | limitTo: limit --><p ng-repeat="serviceTag in serviceTags | limitTo: limit" class="ng-scope"><a ng-click="toggleServiceLayer(serviceTag); isActive = !isActive;" ng-class="{'mc-active-tag': isActive }" href="" class="ng-binding">OGC WMTS</a></p><!-- end ngRepeat: serviceTag in serviceTags | limitTo: limit -->
+          </div>
+        </div>
+      </div>
+
+
+      <div class="col-md-9">
+        <!-- ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">2011 Vessel Density: Fishing <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="https://www.marinecadastre.gov/" class="ng-binding ng-scope">MarineCadastre.gov</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="2011 Vessel Density: Fishing" analytics-category="East Coast Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://marinecadastre.gov/downloads/data/ais/ais2011/EastCoastFishingVesselDensity2011.zip" class="ng-binding" href="https://marinecadastre.gov/downloads/data/ais/ais2011/EastCoastFishingVesselDensity2011.zip">East Coast Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="2011 Vessel Density: Fishing" analytics-category="Great Lakes Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://marinecadastre.gov/downloads/data/ais/ais2011/GreatLakesFishingVesselDensity2011.zip" class="ng-binding" href="https://marinecadastre.gov/downloads/data/ais/ais2011/GreatLakesFishingVesselDensity2011.zip">Great Lakes Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="2011 Vessel Density: Fishing" analytics-category="Gulf of Mexico Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://marinecadastre.gov/downloads/data/ais/ais2011/GulfofMexicoFishingVesselDensity2011.zip" class="ng-binding" href="https://marinecadastre.gov/downloads/data/ais/ais2011/GulfofMexicoFishingVesselDensity2011.zip">Gulf of Mexico Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="2011 Vessel Density: Fishing" analytics-category="West Coast Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://marinecadastre.gov/downloads/data/ais/ais2011/WestCoastFishingVesselDensity2011.zip" class="ng-binding" href="https://marinecadastre.gov/downloads/data/ais/ais2011/WestCoastFishingVesselDensity2011.zip">West Coast Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle" disabled="disabled"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://marinecadastre.gov/ais/" class="ng-binding" href="https://marinecadastre.gov/ais/">Source Info</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://marinecadastre.gov/news/load.php?url=posts/automatic-identification-system.html" class="ng-binding" href="https://marinecadastre.gov/news/load.php?url=posts/automatic-identification-system.html">Uses</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.fisheries.noaa.gov/inport/item/48884" class="ng-binding" href="https://www.fisheries.noaa.gov/inport/item/48884"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="&amp;extent=-100,40&amp;level=4" disabled="disabled"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button" disabled="disabled"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            Automatic Identification Systems (AIS) are a navigation safety device that transmits and monitors the location and characteristics of many vessels in U.S. and international waters in real-time. This dataset represents the density of fishing vessel traffic in 2011 for the US Atlantic and West Coast from vessels with AIS transponders in 100 meter grid cells. The dataset is best interpreted using a high to low density scale and does not represent actual vessel counts. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">2013 Vessel Density: Fishing <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="https://www.marinecadastre.gov/" class="ng-binding ng-scope">MarineCadastre.gov</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="2013 Vessel Density: Fishing" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://marinecadastre.gov/downloads/data/ais/ais2013/VesselDensityFishing2013.zip" class="ng-binding" href="https://marinecadastre.gov/downloads/data/ais/ais2013/VesselDensityFishing2013.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle" disabled="disabled"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://marinecadastre.gov/ais/" class="ng-binding" href="https://marinecadastre.gov/ais/">Source Info</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://marinecadastre.gov/news/load.php?url=posts/automatic-identification-system.html" class="ng-binding" href="https://marinecadastre.gov/news/load.php?url=posts/automatic-identification-system.html">Uses</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.fisheries.noaa.gov/inport/item/48934" class="ng-binding" href="https://www.fisheries.noaa.gov/inport/item/48934"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="&amp;extent=-100,40&amp;level=4" disabled="disabled"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button" disabled="disabled"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            Automatic Identification Systems (AIS) are a navigation safety device that transmits and monitors the location and characteristics of many vessels in U.S. and international waters in real-time. This dataset represents the density of fishing vessel traffic in 2013 for the US Atlantic and West Coast from vessels with AIS transponders in 100 meter grid cells. The dataset is best interpreted using a high to low density scale and does not represent actual vessel counts. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">Aquaculture <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="https://www.marinecadastre.gov/" class="ng-binding ng-scope">MarineCadastre.gov</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Aquaculture" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://marinecadastre.gov/downloads/data/mc/Aquaculture.zip" class="ng-binding" href="https://marinecadastre.gov/downloads/data/mc/Aquaculture.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://coast.noaa.gov/arcgis/rest/services/OceanReports/Aquaculture/MapServer" class="ng-binding" href="https://coast.noaa.gov/arcgis/rest/services/OceanReports/Aquaculture/MapServer">Esri GeoServices (cached)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://coastalscience.noaa.gov/research/marine-spatial-ecology/aquaculture/" class="ng-binding" href="https://coastalscience.noaa.gov/research/marine-spatial-ecology/aquaculture/">Source Info</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.fisheries.noaa.gov/inport/item/53129/" class="ng-binding" href="https://www.fisheries.noaa.gov/inport/item/53129/"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://coast.noaa.gov/arcgis/rest/services/OceanReports/Aquaculture/MapServer&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://coast.noaa.gov/arcgis/rest/services/OceanReports/Aquaculture/MapServer&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            Aquaculture, also known as aquafarming, is the farming of aquatic organisms such as fish, crustaceans, mollusks, and aquatic plants. The presence and location of aquaculture sites were derived from multiple state websites and include only those in coastal and marine saltwater areas. The following states are included in this layer: Alaska, California, Connecticut, Florida, Louisiana, Maine, New York, North Carolina, Oregon Rhode Island, Virginia and Washington. The MarineCadastre.gov data team is continuing to work with aquaculture coordinators in each coastal state to fill current data gaps and improve the accuracy of existing data sets. As such, these data should be considered a work in progress. The user is encouraged to read the metadata of each individual state’s data carefully, since geometry, attribute details, and timeliness are not necessarily consistent among data sets used to develop this layer. The naming conventions for the type of aquaculture site (license versus lease) were retained as they are defined and administered by the individual states. The layer is shown by the area type: finfish, shellfish, and other (algae, crustacean, or unknown farming). Details of each state’s data source are described in the data-processing section. The data are not a complete collection of aquaculture locations within the U.S., nor are the locations to be considered exact. These data are intended for coastal and ocean planning. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">Atlantic Fishing Revenue Intensity, 2007-2012 <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.boem.gov/" class="ng-binding ng-scope">Bureau of Ocean Energy Management</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Atlantic Fishing Revenue Intensity, 2007-2012" analytics-category="Composite Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://www.boem.gov/Mean-Annual-Revenue-2007-2012/" class="ng-binding" href="http://www.boem.gov/Mean-Annual-Revenue-2007-2012/">Composite Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Atlantic Fishing Revenue Intensity, 2007-2012" analytics-category="FMP Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://www.boem.gov/FMP/" class="ng-binding" href="http://www.boem.gov/FMP/">FMP Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Atlantic Fishing Revenue Intensity, 2007-2012" analytics-category="Gear Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://www.boem.gov/Gear/" class="ng-binding" href="http://www.boem.gov/Gear/">Gear Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Atlantic Fishing Revenue Intensity, 2007-2012" analytics-category="Port Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://www.boem.gov/Port/" class="ng-binding" href="http://www.boem.gov/Port/">Port Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Atlantic Fishing Revenue Intensity, 2007-2012" analytics-category="Species Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://www.boem.gov/Species/" class="ng-binding" href="http://www.boem.gov/Species/">Species Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Atlantic Fishing Revenue Intensity, 2007-2012" analytics-category="State Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://www.boem.gov/State/" class="ng-binding" href="http://www.boem.gov/State/">State Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/MMC_Layers/MapServer/31" class="ng-binding" href="https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/MMC_Layers/MapServer/31">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.boem.gov/arcgis/services/BOEM_BSEE/MMC_Layers/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS" class="ng-binding" href="https://gis.boem.gov/arcgis/services/BOEM_BSEE/MMC_Layers/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS">OGC WMS</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.boem.gov/ESPIS/5/5580.pdf" class="ng-binding" href="https://www.boem.gov/ESPIS/5/5580.pdf">Publication</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.boem.gov/ESPIS/5/5581.pdf" class="ng-binding" href="https://www.boem.gov/ESPIS/5/5581.pdf">Publication</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://metadata.boem.gov/geospatial/allyrsgrs_mean_FGDC.xml" class="ng-binding" href="http://metadata.boem.gov/geospatial/allyrsgrs_mean_FGDC.xml"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/MMC_Layers/MapServer/31&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/MMC_Layers/MapServer/31&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            This is a single data set from a larger study. The full study is titled "Socio-Economic Impact of Outer Continental Shelf Wind Energy Development on Fishing in the U.S. Atlantic". Each quarter square km (500 m) cell has been summed for the mean correlated economic value over the six year period analyzed (2007-2012). This information was created for each state, gear type, Fishery Management Plan (FMP), top 30 exposed ports and top 30 exposed species. This was calculated using Vessel Trip Reports (VTR), Cumulative Distribution Function (CDF) which estimates radial distance within which fishing activity is likely to occur, and a 500 m raster cell output. The value is in US dollars for 2012 representing the sum of the mean values for all six years, and then classified into one of the 8 classes. The top 30 species included in this assessment are:  Ocean Quahog, Surf Clam, Little Skate, Squid (Illex &amp; Loligo), Menhaden, Winter Skate, Channeled Whelk, Red Grouper, Atlantic Herring, Vermillion Snapper, Atlantic Croaker, Jonah Crab, Red Hake, Atlantic Mackerel, Silver Hake, King Mackerel, Butterfish, Yellowtail Founder, Winter Flounder, Summer Flounder, Black Sea Bass, Monkfish, Bluefish, Lobster, Spiny Dogfish, Scup, Skates, Cod, Sea Scallop.
+Note: Local and regionally important fisheries such as shrimp are not included in this analysis so users should remember that the actual mean revenue if all species were included may be much greater in some areas. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">Essential Fish Habitat (EFH) <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.nmfs.noaa.gov/" class="ng-binding ng-scope">NOAA National Marine Fisheries Service</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Essential Fish Habitat (EFH)" analytics-category=" Go To Download Site" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://www.habitat.noaa.gov/protection/efh/newInv/index.html" class="ng-binding" href="http://www.habitat.noaa.gov/protection/efh/newInv/index.html"> Go To Download Site</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Essential Fish Habitat (EFH)" analytics-category="National Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://www.habitat.noaa.gov/protection/efh/newInv/data/nationwide/nationwide_efh.zip" class="ng-binding" href="https://www.habitat.noaa.gov/protection/efh/newInv/data/nationwide/nationwide_efh.zip">National Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://idpgis.ncep.noaa.gov/arcgis/rest/services/NMFS/EFH_Only/MapServer/0" class="ng-binding" href="https://idpgis.ncep.noaa.gov/arcgis/rest/services/NMFS/EFH_Only/MapServer/0">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://idpgis.ncep.noaa.gov/arcgis/services/NMFS/EFH_Only/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS" class="ng-binding" href="https://idpgis.ncep.noaa.gov/arcgis/services/NMFS/EFH_Only/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS">OGC WMS</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://marinecadastre.gov/news/load.php?url=posts/essential-fish-habitat.html" class="ng-binding" href="https://marinecadastre.gov/news/load.php?url=posts/essential-fish-habitat.html">Uses</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.habitat.noaa.gov/apps/efhmapper/" class="ng-binding" href="https://www.habitat.noaa.gov/apps/efhmapper/">Source Map</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://www.habitat.noaa.gov/protection/efh/newInv/EFHI/dd/metadata/efha_fgdc_std.htm" class="ng-binding" href="http://www.habitat.noaa.gov/protection/efh/newInv/EFHI/dd/metadata/efha_fgdc_std.htm"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://idpgis.ncep.noaa.gov/arcgis/rest/services/NMFS/EFH_Only/MapServer/0&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://idpgis.ncep.noaa.gov/arcgis/rest/services/NMFS/EFH_Only/MapServer/0&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            NOAA’s National Marine Fisheries Service works with regional fishery management councils to identify Essential Fish Habitat (EFH) for every life stage of federally managed species using the best available scientific information. The data in MarineCadastre.gov are developed by NOAA Fisheries using methods that reflect regional differences in both source data and management needs. Because of the variability in the quality and intended usage of these data, each should be considered individually when interpreting the accuracy and utility of the information that they provide. Please be sure to view the EFH Mapper (http://www.habitat.noaa.gov/protection/efh/efhmapper/) and read the information under the Data Quality tab in the Help menu to fully understand the usage constraints for each data layer and the completeness and accuracy of the information. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">Habitat Areas of Particular Concern <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.nmfs.noaa.gov/" class="ng-binding ng-scope">NOAA National Marine Fisheries Service</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Habitat Areas of Particular Concern" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://www.habitat.noaa.gov/protection/efh/newInv/data/nationwide/nationwide_hapc.zip" class="ng-binding" href="https://www.habitat.noaa.gov/protection/efh/newInv/data/nationwide/nationwide_hapc.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://idpgis.ncep.noaa.gov/arcgis/rest/services/NMFS/HAPC/MapServer/0" class="ng-binding" href="https://idpgis.ncep.noaa.gov/arcgis/rest/services/NMFS/HAPC/MapServer/0">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://idpgis.ncep.noaa.gov/arcgis/services/NMFS/HAPC/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS" class="ng-binding" href="https://idpgis.ncep.noaa.gov/arcgis/services/NMFS/HAPC/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS">OGC WMS</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://marinecadastre.gov/news/load.php?url=posts/habitat-area-of-particular-concern.html" class="ng-binding" href="https://marinecadastre.gov/news/load.php?url=posts/habitat-area-of-particular-concern.html">Uses</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://www.ncddc.noaa.gov/approved_recs/nmfs/ohc/hp/HP_ResourceFolder/HP01/HPDB1/HP_MDR_02.html" class="ng-binding" href="http://www.ncddc.noaa.gov/approved_recs/nmfs/ohc/hp/HP_ResourceFolder/HP01/HPDB1/HP_MDR_02.html"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://idpgis.ncep.noaa.gov/arcgis/rest/services/NMFS/HAPC/MapServer/0&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://idpgis.ncep.noaa.gov/arcgis/rest/services/NMFS/HAPC/MapServer/0&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            Habitat Areas of Particular Concern (HAPC) are discrete subsets of Essential Fish Habitat (EFH) that provide extremely important ecological functions or are especially vulnerable to degradation. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">Hawaii Bottomfish - Catch per unit effort (catch per fishing trip) <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="https://coastalscience.noaa.gov/" class="ng-binding ng-scope">NOAA National Centers for Coastal Ocean Science</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Hawaii Bottomfish - Catch per unit effort (catch per fishing trip)" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://www.nodc.noaa.gov/archive/arc0095/0155189/1.1/data/0-data/Marine_Biogeographic_Assessment_of_the_Main_Hawaiian_Islands/GIS_Data/File-Geodatabases/GIS-Data_FileGeodatabase_Chapter-4_Fishes.zip" class="ng-binding" href="https://www.nodc.noaa.gov/archive/arc0095/0155189/1.1/data/0-data/Marine_Biogeographic_Assessment_of_the_Main_Hawaiian_Islands/GIS_Data/File-Geodatabases/GIS-Data_FileGeodatabase_Chapter-4_Fishes.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.ngdc.noaa.gov/arcgis/rest/services/nccos/BiogeographicAssessments_NCCOS_MHIMarineBiogeographicAssessment/MapServer/38" class="ng-binding" href="https://gis.ngdc.noaa.gov/arcgis/rest/services/nccos/BiogeographicAssessments_NCCOS_MHIMarineBiogeographicAssessment/MapServer/38">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.ncddc.noaa.gov/arcgis/services/BiogeographicAssessments/NCCOS_MHIMarineBiogeographicAssessment/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS" class="ng-binding" href="https://www.ncddc.noaa.gov/arcgis/services/BiogeographicAssessments/NCCOS_MHIMarineBiogeographicAssessment/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS">OGC WMS</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://coastalscience.noaa.gov/projects/detail?key=163" class="ng-binding" href="https://coastalscience.noaa.gov/projects/detail?key=163">Source Info</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.coastalscience.noaa.gov/publications/detail?resource=YtqWisRPF2mmnYD9wzx6rQpxBkZa/fbI7avAGqCDzPs=" class="ng-binding" href="https://www.coastalscience.noaa.gov/publications/detail?resource=YtqWisRPF2mmnYD9wzx6rQpxBkZa/fbI7avAGqCDzPs=">Publication</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0155189" class="ng-binding" href="https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0155189"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.ngdc.noaa.gov/arcgis/rest/services/nccos/BiogeographicAssessments_NCCOS_MHIMarineBiogeographicAssessment/MapServer/38&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.ngdc.noaa.gov/arcgis/rest/services/nccos/BiogeographicAssessments_NCCOS_MHIMarineBiogeographicAssessment/MapServer/38&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            Non-confidential fishery dependent catch data describing the numbers of pounds (lbs) of Deep 7 bottomfish caught per fishing trip. Landings are summarized by location based on the Hawaiian Commercial Fisheries Statistical Carts. 
+
+For the full dataset description go to linked Publication under the Additional Information tab and see:
+
+Stamoulis, K.A., et. al. 2016. Chapter 4: Fishes - Reef Fish. pp. 156-196. In: B.M. Costa and M.S. Kendall (eds.). Marine Biogeographic Assessment of the Main Hawaiian Islands. BOEM and NOAA. OCS Study BOEM 2016-035 and NOAA Technical Memorandum NOS NCCOS 214. 359 pp.
+
+Dataset citation: DAR. 2014. Fishery-Dependent Data. State of Hawaii, Department of Land and Natural Resources, Division of Aquatic Resources. Data Provided 28 October 2015. 
+
+The download is for the entire Fisheries geodatabase which includes over 100 feature classes depicting species locations and benthic characteristics of the Main Hawaiian Island.  This layer is:  BottomFishCommunities_CompiledDARFisheryRecords_Deep7_Catch_Summary. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">Hawaii Reef Fish - Predicted Total Biomass <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="https://coastalscience.noaa.gov/" class="ng-binding ng-scope">NOAA National Centers for Coastal Ocean Science</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Hawaii Reef Fish - Predicted Total Biomass" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://www.nodc.noaa.gov/archive/arc0095/0155189/1.1/data/0-data/Marine_Biogeographic_Assessment_of_the_Main_Hawaiian_Islands/GIS_Data/File-Geodatabases/GIS-Data_FileGeodatabase_Chapter-4_Fishes.zip" class="ng-binding" href="https://www.nodc.noaa.gov/archive/arc0095/0155189/1.1/data/0-data/Marine_Biogeographic_Assessment_of_the_Main_Hawaiian_Islands/GIS_Data/File-Geodatabases/GIS-Data_FileGeodatabase_Chapter-4_Fishes.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.ngdc.noaa.gov/arcgis/rest/services/nccos/BiogeographicAssessments_NCCOS_MHIMarineBiogeographicAssessment/MapServer/43" class="ng-binding" href="https://gis.ngdc.noaa.gov/arcgis/rest/services/nccos/BiogeographicAssessments_NCCOS_MHIMarineBiogeographicAssessment/MapServer/43">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.ncddc.noaa.gov/arcgis/services/BiogeographicAssessments/NCCOS_MHIMarineBiogeographicAssessment/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS" class="ng-binding" href="https://www.ncddc.noaa.gov/arcgis/services/BiogeographicAssessments/NCCOS_MHIMarineBiogeographicAssessment/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS">OGC WMS</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://coastalscience.noaa.gov/projects/detail?key=163" class="ng-binding" href="https://coastalscience.noaa.gov/projects/detail?key=163">Source Info</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.coastalscience.noaa.gov/publications/detail?resource=YtqWisRPF2mmnYD9wzx6rQpxBkZa/fbI7avAGqCDzPs=" class="ng-binding" href="https://www.coastalscience.noaa.gov/publications/detail?resource=YtqWisRPF2mmnYD9wzx6rQpxBkZa/fbI7avAGqCDzPs=">Publication</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0155189" class="ng-binding" href="https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0155189"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.ngdc.noaa.gov/arcgis/rest/services/nccos/BiogeographicAssessments_NCCOS_MHIMarineBiogeographicAssessment/MapServer/43&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.ngdc.noaa.gov/arcgis/rest/services/nccos/BiogeographicAssessments_NCCOS_MHIMarineBiogeographicAssessment/MapServer/43&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            Predicted reef fish biomass (grams/square meter) values for Hawaii from boosted regression tree models. Models were based on 29 environmental datasets from 4 categories (topographic, benthic habitat composition, geographic, and oceanographic).  
+
+For the full dataset description go to linked Publication under the Additional Information tab and see:
+
+Stamoulis, K.A., et. al. 2016. Chapter 4: Fishes - Reef Fish. pp. 156-196. In: B.M. Costa and M.S. Kendall (eds.). Marine Biogeographic Assessment of the Main Hawaiian Islands. Bureau of Ocean Energy Management and National Oceanic and Atmospheric Administration. OCS Study BOEM 2016-035 and NOAA Technical Memorandum NOS NCCOS 214. 359 pp.
+
+The download is for the entire Fisheries geodatabase which includes over 100 feature classes depicting species locations and benthic characteristics of the Main Hawaiian Island.  This layer is a compilation of 4 layers: ReefFishCommunities_ModelPredictions_[IslandName]_Total_Biomass_Mean. Note: this raster layer is not compatible with ArcGIS Online. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">Hawaii Reef Fish - Total Biomass <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="https://coastalscience.noaa.gov/" class="ng-binding ng-scope">NOAA National Centers for Coastal Ocean Science</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Hawaii Reef Fish - Total Biomass" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://www.nodc.noaa.gov/archive/arc0095/0155189/1.1/data/0-data/Marine_Biogeographic_Assessment_of_the_Main_Hawaiian_Islands/GIS_Data/File-Geodatabases/GIS-Data_FileGeodatabase_Chapter-4_Fishes.zip" class="ng-binding" href="https://www.nodc.noaa.gov/archive/arc0095/0155189/1.1/data/0-data/Marine_Biogeographic_Assessment_of_the_Main_Hawaiian_Islands/GIS_Data/File-Geodatabases/GIS-Data_FileGeodatabase_Chapter-4_Fishes.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.ngdc.noaa.gov/arcgis/rest/services/nccos/BiogeographicAssessments_NCCOS_MHIMarineBiogeographicAssessment/MapServer/42" class="ng-binding" href="https://gis.ngdc.noaa.gov/arcgis/rest/services/nccos/BiogeographicAssessments_NCCOS_MHIMarineBiogeographicAssessment/MapServer/42">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.ncddc.noaa.gov/arcgis/services/BiogeographicAssessments/NCCOS_MHIMarineBiogeographicAssessment/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS" class="ng-binding" href="https://www.ncddc.noaa.gov/arcgis/services/BiogeographicAssessments/NCCOS_MHIMarineBiogeographicAssessment/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS">OGC WMS</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://coastalscience.noaa.gov/projects/detail?key=163" class="ng-binding" href="https://coastalscience.noaa.gov/projects/detail?key=163">Source Info</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.coastalscience.noaa.gov/publications/detail?resource=YtqWisRPF2mmnYD9wzx6rQpxBkZa/fbI7avAGqCDzPs=" class="ng-binding" href="https://www.coastalscience.noaa.gov/publications/detail?resource=YtqWisRPF2mmnYD9wzx6rQpxBkZa/fbI7avAGqCDzPs=">Publication</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0155189" class="ng-binding" href="https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0155189"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.ngdc.noaa.gov/arcgis/rest/services/nccos/BiogeographicAssessments_NCCOS_MHIMarineBiogeographicAssessment/MapServer/42&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.ngdc.noaa.gov/arcgis/rest/services/nccos/BiogeographicAssessments_NCCOS_MHIMarineBiogeographicAssessment/MapServer/42&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            Standardized total biomass values from underwater visual surveys for reef fishes in Hawaii. Data came from a variety of sources from 1992 - 2012 and were compiled by the University of Hawaii Fisheries Ecology Research Lab. 
+
+For the full dataset description go to linked Publication under the Additional Information tab and see:
+
+Stamoulis, K.A., et. al. 2016. Chapter 4: Fishes - Reef Fish. pp. 156-196. In: B.M. Costa and M.S. Kendall (eds.). Marine Biogeographic Assessment of the Main Hawaiian Islands. Bureau of Ocean Energy Management and National Oceanic and Atmospheric Administration. OCS Study BOEM 2016-035 and NOAA Technical Memorandum NOS NCCOS 214. 359 pp.
+
+Dataset citation: https://fisheriesecologyresearchlab.wordpress. com/
+
+The download is for the entire Fisheries geodatabase which includes over 100 feature classes depicting species locations and benthic characteristics of the Main Hawaiian Island.  This layer is: ReefFishCommunities_Compiled_Survey_Records. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">Individual Fish Species <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.nefsc.noaa.gov/" class="ng-binding ng-scope">NOAA Northeast Fisheries Science Center</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="Individual Fish Species" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://seamap.env.duke.edu/models/mdat/Fish/MDAT_Fish_BioMass_NEFSC_Species.zip" class="ng-binding" href="http://seamap.env.duke.edu/models/mdat/Fish/MDAT_Fish_BioMass_NEFSC_Species.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://mgelmaps.env.duke.edu/mdat/rest/services/MDAT/Fish_BioMass_NEFSC_Species/MapServer/" class="ng-binding" href="https://mgelmaps.env.duke.edu/mdat/rest/services/MDAT/Fish_BioMass_NEFSC_Species/MapServer/">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://nefsc.noaa.gov/ecosys/" class="ng-binding" href="http://nefsc.noaa.gov/ecosys/">Source Info</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://seamap.env.duke.edu/models/mdat/Fish/MDAT_Fish_Biomass_Metadata.pdf" class="ng-binding" href="http://seamap.env.duke.edu/models/mdat/Fish/MDAT_Fish_Biomass_Metadata.pdf"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://mgelmaps.env.duke.edu/mdat/rest/services/MDAT/Fish_BioMass_NEFSC_Species/MapServer/&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://mgelmaps.env.duke.edu/mdat/rest/services/MDAT/Fish_BioMass_NEFSC_Species/MapServer/&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            This entry provides access to the individual fish data layers made available by the Marine-life Data and Analysis Team (MDAT) led by the Duke University Marine Geospatial Ecology Lab, and including NOAA National Centers for Coastal Ocean Science, NOAA Northeast Fisheries Science Center (NEFSC), Loyola University Chicago, and The Nature Conservancy (TNC). In 2019, MDAT member TNC produced fish biomass and distribution products in partnership with OceanAdapt (a collaboration between the Pinksy Lab at Rutgers University and the National Marine Fisheries Service) and the NOAA Northeast Fisheries Science Center for 81 individual fish species in spring and fall. These products are also bubble plots of raw observations and IDW surfaces at a 2km x 2km resolution for bottom trawl data from NEFSC from 2010-2019 (fall and spring). All units are kilograms per tow. Survey samples for fall trawls were collected primarily in September and October, with some in November and a small number in December. Spring survey samples were collected from February to April. Note: viewing in the National Viewer is not enabled for this layer. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">National Marine Fisheries Service Regions <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.nmfs.noaa.gov/" class="ng-binding ng-scope">NOAA National Marine Fisheries Service</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="National Marine Fisheries Service Regions" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://marinecadastre.gov/downloads/data/mc/NationalMarineFisheriesServiceRegions.zip" class="ng-binding" href="https://marinecadastre.gov/downloads/data/mc/NationalMarineFisheriesServiceRegions.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://coast.noaa.gov/arcgis/rest/services/MarineCadastre/BoundariesAndRegions/MapServer/2" class="ng-binding" href="https://coast.noaa.gov/arcgis/rest/services/MarineCadastre/BoundariesAndRegions/MapServer/2">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.fisheries.noaa.gov/inport/item/48904" class="ng-binding" href="https://www.fisheries.noaa.gov/inport/item/48904"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://coast.noaa.gov/arcgis/rest/services/MarineCadastre/BoundariesAndRegions/MapServer/2&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://coast.noaa.gov/arcgis/rest/services/MarineCadastre/BoundariesAndRegions/MapServer/2&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            To support regional management efforts, MarineCadastre.gov has developed geographic representations in each of the National Marine Fisheries Service (NOAA Fisheries) regions.  Connect with NOAA Fisheries and learn more about fishery management efforts in each of the respective regions by visiting: http://www.nmfs.noaa.gov/. When viewing the layer in a map, links to the individual region's websites can be found by using the Identify tool and clicking on a region in the map. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">US Fish and Wildlife Service Regions <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.fws.gov/" class="ng-binding ng-scope">U.S. Fish and Wildlife Service</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="US Fish and Wildlife Service Regions" analytics-category=" Go To Download Site" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://gis-fws.opendata.arcgis.com/datasets/fws::fws-national-legacy-regional-boundaries/about" class="ng-binding" href="https://gis-fws.opendata.arcgis.com/datasets/fws::fws-national-legacy-regional-boundaries/about"> Go To Download Site</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://services.arcgis.com/QVENGdaPbd4LUkLV/arcgis/rest/services/FWS_Legacy_Regional_Boundaries/FeatureServer/0" class="ng-binding" href="https://services.arcgis.com/QVENGdaPbd4LUkLV/arcgis/rest/services/FWS_Legacy_Regional_Boundaries/FeatureServer/0">Esri GeoServices (feature)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://fws.maps.arcgis.com/sharing/rest/content/items/c9d8cd103c5c444f9f65a1bc0dfe1b95/info/metadata/metadata.xml?format=default&amp;output=html" class="ng-binding" href="https://fws.maps.arcgis.com/sharing/rest/content/items/c9d8cd103c5c444f9f65a1bc0dfe1b95/info/metadata/metadata.xml?format=default&amp;output=html"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://services.arcgis.com/QVENGdaPbd4LUkLV/arcgis/rest/services/FWS_Legacy_Regional_Boundaries/FeatureServer/0&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://services.arcgis.com/QVENGdaPbd4LUkLV/arcgis/rest/services/FWS_Legacy_Regional_Boundaries/FeatureServer/0&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            Regions of the U.S. Fish and Wildlife Service. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">West Coast Bottom Trawl Fishing Intensity (2002-2006) <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.nmfs.noaa.gov/" class="ng-binding ng-scope">NOAA National Marine Fisheries Service</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="West Coast Bottom Trawl Fishing Intensity (2002-2006)" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://mustang.coas.oregonstate.edu/EFH_Downloads/T2/BottrawlBefore.zip" class="ng-binding" href="http://mustang.coas.oregonstate.edu/EFH_Downloads/T2/BottrawlBefore.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/3" class="ng-binding" href="http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/3">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://efh-catalog.coas.oregonstate.edu/mapservice/" class="ng-binding" href="http://efh-catalog.coas.oregonstate.edu/mapservice/">Data Page</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://efh-catalog.coas.oregonstate.edu/metadata/458/5" class="ng-binding" href="http://efh-catalog.coas.oregonstate.edu/metadata/458/5"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/3&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/3&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            This data layer depicts the relative intensity of commercial bottom trawling off the U.S. West Coast from 1 Jan 2002 –11 Jun 2006. Each of the three coastal states administers a commercial logbook program, for which records are uploaded to the Pacific Fisheries Information Network (PacFIN) regional database. Database records were utilized for commercial trips using bottom trawl gear types (e.g., “small” footrope, “large” footrope, flatfish, selective flatfish, and roller trawl) regardless of fishery sector (e.g., limited entry, open access). Records from the majority of state-managed trawl fisheries (e.g., pink shrimp, ridgeback prawn, sea urchin) are not included in PacFIN and thus are not represented. Tows targeting one state-managed trawl fishery –California halibut –are submitted to PacFIN and thus are included in this data layer. Please note: raster layers served in a map service are not compatible when viewed in ArcGIS.com. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">West Coast Bottom Trawl Fishing Intensity (2006-2010) <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.nmfs.noaa.gov/" class="ng-binding ng-scope">NOAA National Marine Fisheries Service</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="West Coast Bottom Trawl Fishing Intensity (2006-2010)" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://mustang.coas.oregonstate.edu/EFH_Downloads/T2/BottrawlAfter.zip" class="ng-binding" href="http://mustang.coas.oregonstate.edu/EFH_Downloads/T2/BottrawlAfter.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/5" class="ng-binding" href="http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/5">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://efh-catalog.coas.oregonstate.edu/mapservice/" class="ng-binding" href="http://efh-catalog.coas.oregonstate.edu/mapservice/">Data Page</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://efh-catalog.coas.oregonstate.edu/metadata/460/5" class="ng-binding" href="http://efh-catalog.coas.oregonstate.edu/metadata/460/5"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/5&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/5&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            This data layer depicts the relative intensity of commercial bottom trawling off the U.S. West Coast from 12 Jun 2006 –31 Dec 2010. Each of the three coastal states administers a commercial logbook program, for which records are uploaded to the Pacific Fisheries Information Network (PacFIN) regional database. Database records were utilized for commercial trips using bottom trawl gear types (e.g., “small” footrope, “large” footrope, flatfish, selective flatfish, and roller trawl) regardless of fishery sector (e.g., limited entry, open access). Records from the majority of state-managed trawl fisheries (e.g., pink shrimp, ridgeback prawn, sea urchin) are not included in PacFIN and thus are not represented. Tows targeting one state-managed trawl fishery –California halibut –are submitted to PacFIN and thus are included in this data layer. Please note: raster layers served in a map service are not compatible when viewed in ArcGIS.com. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">West Coast Commercial Fishing Closures, 2015 <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.boem.gov/" class="ng-binding ng-scope">Bureau of Ocean Energy Management</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="West Coast Commercial Fishing Closures, 2015" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://www.boem.gov/Fishing-Closures-Map-Package/" class="ng-binding" href="https://www.boem.gov/Fishing-Closures-Map-Package/"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/3" class="ng-binding" href="https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/3">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.boem.gov/arcgis/services/BOEM_BSEE/West_Coast_Fishing/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS" class="ng-binding" href="https://gis.boem.gov/arcgis/services/BOEM_BSEE/West_Coast_Fishing/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS">OGC WMTS</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.fisheries.noaa.gov/inport/item/48943" class="ng-binding" href="https://www.fisheries.noaa.gov/inport/item/48943"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/3&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/3&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            These data delineate state and federally managed ocean areas off the West Coast of the United States that are closed to or have restrictions on commercial fishing for fish and invertebrates as of June 2015. These areas include marine protected areas, marine reserves, essential fish habitat conservation areas, and other types of conservation areas. Closures and restrictions may be year-round or seasonal. The data do not include all spatially explicit fishing regulations. The focus of these data is on fishing closures and restrictions that generally persist through time, and do not include many fishing management measures that are used to open and close areas dynamically to manage species, harvests, and seasons. Some areas where access is prohibited or restricted are included because these act as “de-facto" closures or restrictions to fishing. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">West Coast EFH Conservation Areas <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.nmfs.noaa.gov/" class="ng-binding ng-scope">NOAA National Marine Fisheries Service</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="West Coast EFH Conservation Areas" analytics-category=" Go To Download Site" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://www.habitat.noaa.gov/protection/efh/newInv/index.html" class="ng-binding" href="http://www.habitat.noaa.gov/protection/efh/newInv/index.html"> Go To Download Site</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://coast.noaa.gov/arcgis/rest/services/MarineCadastre/PhysicalOceanographicAndMarineHabitat/MapServer/12" class="ng-binding" href="https://coast.noaa.gov/arcgis/rest/services/MarineCadastre/PhysicalOceanographicAndMarineHabitat/MapServer/12">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://www.westcoast.fisheries.noaa.gov/publications/fishery_management/groundfish/public_notices/efh_secg.pdf" class="ng-binding" href="http://www.westcoast.fisheries.noaa.gov/publications/fishery_management/groundfish/public_notices/efh_secg.pdf">Publication</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.fisheries.noaa.gov/inport/item/48942" class="ng-binding" href="https://www.fisheries.noaa.gov/inport/item/48942"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://coast.noaa.gov/arcgis/rest/services/MarineCadastre/PhysicalOceanographicAndMarineHabitat/MapServer/12&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://coast.noaa.gov/arcgis/rest/services/MarineCadastre/PhysicalOceanographicAndMarineHabitat/MapServer/12&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            These data depict Essential Fish Habitat (EFH) conservation areas off Washington, Oregon, and California.  The coordinate locations are from NMFS' Final Rule to implement Amendment 19 to the Pacific Coast Groundfish Fishery Management Plan (71 FR 27408; May 11, 2006).  In order to minimize to the extent practicable adverse effects from fishing, the final rule prohibits fishing with various gear types within these areas.  Consult the text of the final rule for specific details about each area and the management measures. The prohibitions are listed in Section 660.306 and the official coordinates are listed in Sections 660.397, 660.398, and 660.399 of the final rule. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">West Coast Fishing Ethnography <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.boem.gov/" class="ng-binding ng-scope">Bureau of Ocean Energy Management</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="West Coast Fishing Ethnography" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://marinecadastre.gov/downloads/data/mc/WestCoastFishingEthnography.zip" class="ng-binding" href="https://marinecadastre.gov/downloads/data/mc/WestCoastFishingEthnography.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/0" class="ng-binding" href="https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/0">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.boem.gov/arcgis/services/BOEM_BSEE/West_Coast_Fishing/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS" class="ng-binding" href="https://gis.boem.gov/arcgis/services/BOEM_BSEE/West_Coast_Fishing/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS">OGC WMS</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.sciencebase.gov/catalog/item/51547afee4b030c71ee0688d" class="ng-binding" href="https://www.sciencebase.gov/catalog/item/51547afee4b030c71ee0688d">Source Info</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://metadata.boem.gov/geospatial/WestCoastFishingEthnography.xml" class="ng-binding" href="https://metadata.boem.gov/geospatial/WestCoastFishingEthnography.xml"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/0&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/0&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            Created as part of a 2012 BOEM study on outer continental shelf (OCS) renewable energy space-use conflicts, this data contains the commercial and recreational fishing locations off the Pacific coast of Washington, Oregon and California. The purpose of the study was to begin to identify potential space-use conflicts between OCS renewable energy development and other uses of the ocean environment and recommend measures that BOEM can implement in order to promote avoidance or mitigation of such conflicts, thereby facilitating responsible and efficient development of OCS renewable energy resources. The ethnographic data was created by engaging individuals and small groups in one on one guided discussions, and making handwritten shapes on paper maps to depict fishing locations. These commercial and recreational fishing locations have since been condensed into a single layer.  These are displayed by showing the sum of reported species for a particular area. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">West Coast Mid-Water Trawl Fishing Intensity (2002-2006) <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.nmfs.noaa.gov/" class="ng-binding ng-scope">NOAA National Marine Fisheries Service</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="West Coast Mid-Water Trawl Fishing Intensity (2002-2006)" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://mustang.coas.oregonstate.edu/EFH_Downloads/T2/MidtrawlBefore.zip" class="ng-binding" href="http://mustang.coas.oregonstate.edu/EFH_Downloads/T2/MidtrawlBefore.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/8" class="ng-binding" href="http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/8">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://efh-catalog.coas.oregonstate.edu/mapservice/" class="ng-binding" href="http://efh-catalog.coas.oregonstate.edu/mapservice/">Data Page</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://efh-catalog.coas.oregonstate.edu/metadata/462/5" class="ng-binding" href="http://efh-catalog.coas.oregonstate.edu/metadata/462/5"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/8&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/8&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            This data layer depicts the relative intensity of commercial mid-water trawling off the U.S. West Coast from 1 Jan 2002 –11 Jun 2006. Records of mid-water trawl tows were compiled from two data sources: 1) Logbook data originating from the state logbook programs and uploaded to the Pacific Fisheries Information Network (PacFIN) regional database, and 2) observer records from the At-Sea Hake Observer Program (A-SHOP). These two data sources represent the shoreside and at-sea hake fleets, respectively. Included in the A-SHOP data are observations of tribal fishing in the at-sea hake sector. Please note: raster layers served in a map service are not compatible when viewed in ArcGIS.com. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">West Coast Mid-Water Trawl Fishing Intensity (2006-2010) <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.nmfs.noaa.gov/" class="ng-binding ng-scope">NOAA National Marine Fisheries Service</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="West Coast Mid-Water Trawl Fishing Intensity (2006-2010)" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://mustang.coas.oregonstate.edu/EFH_Downloads/T2/MidtrawlAfter.zip" class="ng-binding" href="http://mustang.coas.oregonstate.edu/EFH_Downloads/T2/MidtrawlAfter.zip"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/10" class="ng-binding" href="http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/10">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://efh-catalog.coas.oregonstate.edu/mapservice/" class="ng-binding" href="http://efh-catalog.coas.oregonstate.edu/mapservice/">Data Page</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://efh-catalog.coas.oregonstate.edu/metadata/464/5" class="ng-binding" href="http://efh-catalog.coas.oregonstate.edu/metadata/464/5"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/10&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=http://hornet.coas.oregonstate.edu/arcgis/rest/services/Task2_Fishing_Effort/MapServer/10&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            This data layer depicts the relative intensity of commercial mid-water trawling off the U.S. West Coast from 12 Jun 2006 –31 Dec 2010. Records of mid-water trawl tows were compiled from two data sources: 1) Logbook data originating from the state logbook programs and uploaded to the Pacific Fisheries Information Network (PacFIN) regional database, and 2) observer records from the At-Sea Hake Observer Program (A-SHOP). These two data sources represent the shoreside and at-sea hake fleets, respectively. Included in the A-SHOP data are observations of tribal fishing in the at-sea hake sector. Please note: raster layers served in a map service are not compatible when viewed in ArcGIS.com. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">West Coast Recreational Fishing Closures, 2015 <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.boem.gov/" class="ng-binding ng-scope">Bureau of Ocean Energy Management</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="West Coast Recreational Fishing Closures, 2015" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="https://www.boem.gov/Fishing-Closures-Map-Package/" class="ng-binding" href="https://www.boem.gov/Fishing-Closures-Map-Package/"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/2" class="ng-binding" href="https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/2">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.boem.gov/arcgis/services/BOEM_BSEE/West_Coast_Fishing/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS" class="ng-binding" href="https://gis.boem.gov/arcgis/services/BOEM_BSEE/West_Coast_Fishing/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS">OGC WMS</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://metadata.boem.gov/geospatial/WestCoastFishingClosures2015.xml" class="ng-binding" href="https://metadata.boem.gov/geospatial/WestCoastFishingClosures2015.xml"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/2&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/2&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            These data delineate state and federally managed ocean areas off the West Coast of the United States that are closed to or have restrictions on recreational fishing for fish and invertebrates as of June 2015. These areas include marine protected areas, marine reserves, essential fish habitat conservation areas, and other types of conservation areas. Closures and restrictions may be year-round or seasonal. The data do not include all spatially explicit fishing regulations. The focus of these data is on fishing closures and restrictions that generally persist through time, and do not include many fishing management measures that are used to open and close areas dynamically to manage species, harvests, and seasons. Some areas where access is prohibited or restricted are included because these act as “de-facto" closures or restrictions to fishing. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) --><div ng-repeat="layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter)" class="panel mc-panel-layer footer-fix ng-scope">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="ng-binding">West Coast Rockfish Conservation Areas, 2015 <a title="More Information About This Dataset" ng-click="showInfo = !showInfo" href=""><i class="fa  fa-info-circle"></i></a></h4>
+                <p><!-- ngRepeat: provider in layer.Providers[0].Provider --><a target="blank" ng-repeat="provider in layer.Providers[0].Provider" href="http://www.boem.gov/" class="ng-binding ng-scope">Bureau of Ocean Energy Management</a><!-- end ngRepeat: provider in layer.Providers[0].Provider --></p>
+              </div>
+              <div class="col-md-4">
+                <div role="toolbar" class="btn-toolbar">
+                      <div class="btn-group pull-right section-download">
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataDownloads[0].DataDownload" title="Data Downloads" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-cloud-download fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' --><li ng-repeat="downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType'" class="ng-scope">
+                              <a analytics-label="West Coast Rockfish Conservation Areas, 2015" analytics-category=" Data File(s)" analytics-event="Download" analytics-on="click" target="_blank" ng-href="http://www.boem.gov/Fishing-Closures-Map-Package/" class="ng-binding" href="http://www.boem.gov/Fishing-Closures-Map-Package/"> Data File(s)</a> 
+                            </li><!-- end ngRepeat: downloads in layer.DataDownloads[0].DataDownload | orderBy: 'DataServiceType' -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.Services[0].Service" title="Map Services" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-globe fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/1" class="ng-binding" href="https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/1">Esri GeoServices (dynamic)</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service --><li ng-repeat="service in layer.Services[0].Service" class="ng-scope">
+                              <a target="_blank" ng-href="https://gis.boem.gov/arcgis/services/BOEM_BSEE/West_Coast_Fishing/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS" class="ng-binding" href="https://gis.boem.gov/arcgis/services/BOEM_BSEE/West_Coast_Fishing/MapServer/WMSServer?request=GetCapabilities&amp;service=WMS">OGC WMS</a> 
+                            </li><!-- end ngRepeat: service in layer.Services[0].Service -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <button ng-disabled="!layer.DataPages[0].DataPagesInfo &amp;&amp; !layer.Metadata[0].MetadataInfo" title="Uses and Metadata" data-toggle="dropdown" class="btn btn-default dropdown-toggle"><i class="fa fa-chevron-down fa-lg"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <!-- ngRepeat: datapage in layer.DataPages[0].DataPagesInfo --><li ng-repeat="datapage in layer.DataPages[0].DataPagesInfo" class="ng-scope">
+                              <a target="_blank" ng-href="http://www.westcoast.fisheries.noaa.gov/fisheries/management/groundfish_closures/rockfish_areas.html" class="ng-binding" href="http://www.westcoast.fisheries.noaa.gov/fisheries/management/groundfish_closures/rockfish_areas.html">Source Info</a> 
+                            </li><!-- end ngRepeat: datapage in layer.DataPages[0].DataPagesInfo -->
+                            <!-- ngRepeat: metadata in layer.Metadata[0].MetadataInfo --><li ng-repeat="metadata in layer.Metadata[0].MetadataInfo" class="ng-scope">
+                              <a target="_blank" ng-href="https://www.fisheries.noaa.gov/inport/item/48945" class="ng-binding" href="https://www.fisheries.noaa.gov/inport/item/48945"> Metadata</a> 
+                            </li><!-- end ngRepeat: metadata in layer.Metadata[0].MetadataInfo -->
+                          </ul>
+                        </div>
+                        <div class="btn-group">
+                          <a ng-disabled="!layer.PreviewLink" title="Preview" target="_blank" ng-href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/1&amp;extent=-100,40&amp;level=4" class="btn btn-default" href="http://www.arcgis.com/home/webmap/viewer.html?url=https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/West_Coast_Fishing/MapServer/1&amp;extent=-100,40&amp;level=4"><i class="fa fa-eye fa-lg"></i></a> 
+                        </div>
+                      </div>
+                      <div ng-hide="inCart(layer)" class="btn-group pull-right btn-mashup">
+                        <button analytics-label="Add To Map" analytics-category="Button Click" analytics-event="Add To Map" analytics-on="click" ng-disabled="!layer.PreviewLink" ng-click="addLayer(layer)" title="Add Dataset to Map" class="btn btn-default " type="button"><i class="fa fa-plus"></i> Add to Map</button>
+                      </div>
+                      <div ng-show="inCart(layer)" class="btn-group pull-right ng-hide">
+                        <button title="Remove from Map" ng-click="removeLayer(layer)" class="btn btn-mashup btn-mashup-active"><i class="fa fa-shopping-cart fa-lg"></i> Remove from Map</button>     
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+          </div>
+          <div ng-show="showInfo" class="panel-body ng-binding ng-hide">
+            These data delineate Rockfish Conservation Areas (RCA) off the West Coast of the United States for 2015.  There are three types of areas closures depicted in this layer: Commercial Trawl Non-Groundfish, Commercial Trawl Groundfish, and Commercial Non-Trawl Groundfish. These areas represent closures to commercial fishing for non-groundfish with trawl gear, closed to commercial fishing for groundfish with trawl gear, or areas are closed to commercial fishing for groundfish with non-trawl gear, respectively. Closures may vary seasonally. Boundaries are lines that connect a series of coordinates that approximate particular depth contours. North/south boundaries are designated by specific lines of latitude. Keep in mind that Rockfish Management Areas are fairly dynamic and may change as often as 5 times per year. See the Source Info link for the latest information. 
+          </div>
+        </div><!-- end ngRepeat: layer in (filteredLayers | filter: themeFilter | filter:providerFilter | filter:serviceFilter | filter:geoFilter) -->
+      </div>
+  </div><!--Main Page-->
+  </div><!--row-->
+</div><!--container-->
+</div><!--NGLAYER CONTROLLER-->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="partnership">
+        <p>A Collaboration of</p>
+        <a title="Bureau of Ocean Management Homepage" href="http://www.boem.gov/" class="boempart"><img alt="BOEM Logo" src="img/boem.png" /></a>
+        <a title="NOAA Office for Coastal Management Homepage" href="https://coast.noaa.gov/" class="noaapart"><img alt="NOAA Logo" src="img/noaa.png" /></a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <p class="text-center">
+          <a target="_blank" alt="Facebook Icon" href="http://www.facebook.com/pages/Multipurpose-Marine-Cadastre/123284794440133"><i aria-hidden="true" class="fa fa-facebook-square fa-3x"></i></a>
+          <a target="_blank" alt="Twitter Icon" href="http://twitter.com/#%21/marinecadastre"><i aria-hidden="true" class="fa fa-twitter-square fa-3x"></i></a>
+          
+          <a alt="Newsletter Icon" href="subscribe/"><i aria-hidden="true" class="fa fa-at fa-3x"></i></a>
+          <br />
+          <a href="http://oceanservice.noaa.gov/">National Ocean Service</a> |
+          <a href="https://coast.noaa.gov/PrivacyPolicy/privacyPolicy.html">Privacy Policy</a>
+          | <a href="about/disclaimer.html">Link Disclaimer</a> |
+          <a target="_blank" href="https://coast.noaa.gov/survey.html">Customer Satisfaction Survey</a>
+          | <a href="mailto:info@marinecadastre.gov">Contact Us</a> <br />
+          Web Site Owner:
+          <a href="https://coast.noaa.gov/" class="noaapart">NOAA Office for Coastal Management</a>
+          | Last Modified: <span id="ocm_frontend_last_modified">08/19/2022</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+<!-- AngularJS -->
+<script src="lib/angular.min.js"></script>
+<script src="lib/angular-route.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/controllers.js"></script>
+<script src="js/services.js"></script>
+<script src="js/directives.js"></script>
+<script src="js/filters.js"></script>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="js/bootstrap.min.js"></script>
+<script src="lib/ui-bootstrap.min.js" type="text/javascript"></script>
+<!-- analytics -->
+<script src="lib/angulartics.js"></script>
+<script src="lib/angulartics-google-analytics.js"></script>
+
+
+<style type="text/css">
+  .footer-fix:last-of-type {
+    margin-bottom: 100px;
+  }
+</style> 
+
+<script src="../lib/angulartics.js"></script>
+<script src="../lib/angulartics-google-analytics.js"></script>
+  
+
+</body><canvas id="fxdriver-screenshot-canvas" style="display: none;" width="1211" height="3206"></canvas></html>

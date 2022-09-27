@@ -59,7 +59,8 @@ shinyServer(function(input, output, session) {
       addPolygons(
         data = ply_brgns, layerId = as.vector(ply_brgns$brgn),
         color = "gray", opacity = 0.7, weight = 1,
-        fillColor = ~pal_brgns(brgn), fillOpacity = 0.5)
+        fillColor = ~pal_brgns(brgn), fillOpacity = 0.5,
+        label = ~bregion)
 
     # addRasterImage(
     #   r, project = F,

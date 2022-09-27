@@ -46,7 +46,11 @@ vars_sum <- c(
   `Species richness (# of species)` = "nspp",
   `Product: biomass * richness`     = "prod")
 
-dir_tif <- "~/My Drive/projects/offhab/data/oceanadapt.rutgers.edu/data_tif"
+dir_tif <- case_when(
+  Sys.info()[["sysname"]] == "Linux" ~ "/share/data/offhab/oceanadapt.rutgers.edu/data_tif",
+  TRUE ~ "~/My Drive/projects/offhab/data/oceanadapt.rutgers.edu/data_tif")
+stopifnot(dir.exists(dir_tif))
+
 spp_csv <- file.path(dir_tif, "_spp.csv")
 
 d_rgn_spp <- tibble(

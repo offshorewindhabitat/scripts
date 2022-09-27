@@ -1,0 +1,648 @@
+---
+title: "Interpolate to BOEM Regions"
+output: html_document
+date: "2022-09-13"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## DisMap regions
+
+```{r}
+librarian::shelf(
+  arcpullr, dplyr, ggplot2, raster, mapview)
+
+dm_server <-"https://services2.arcgis.com/C8EMgrsFcRFL6LrL/ArcGIS/rest/services/"
+lyr <- "DisMAP_Regions_20220516/FeatureServer/0"
+lyr_url <- paste0(dm_server, lyr)
+d_lyr <- get_spatial_layer(lyr_url) # table(d_lyr$OARegion)
+table(d_lyr$OARegion)
+
+# skipping: Aleutian Islands, Eastern Bering Sea, Gulf of Alaska 
+dmregions <- c(
+  gmx = "Gulf of Mexico",
+  nef = "Northeast US Fall",
+  nes = "Northeast US Spring",
+  sef = "Southeast US Fall",
+  ses = "Southeast US Spring",
+  seu = "Southeast US Summer",
+  wca = "West Coast Annual 2003-Present", # "West Coast Annual",
+  wct = "West Coast Triennial 1977-2004") # West Coast Triennial")
+dmregions_rds <- c(
+  dmregions[!names(dmregions) %in% c("wca","wct")],
+  wca = "West Coast Annual",
+  wct = "West Coast Triennial")
+
+ply_dmrgns <- d_lyr %>% 
+  group_by(OARegion) %>% 
+  filter(OARegion %in% dmregions) %>% 
+  summarize(
+    geometry = st_union(geoms, is_coverage = T) %>% 
+      st_cast("POLYGON")) %>% 
+  st_as_sf(crs = 4326) %>% 
+  mutate(
+    one = 1) %>% 
+  st_make_valid() %>% 
+  st_simplify(dTolerance = 1) # 1 meter
+
+stopifnot(length(setdiff(dmregions, ply_dmrgns$OARegion))==0)
+
+mapview(ply_dmrgns)
+
+ply_dmrgns_mer <- st_transform(ply_dmrgns, 3857)
+r_dmrgns_mer   <- raster(ply_dmrgns_mer, res=2000)
+
+write_sf(ply_dmrgns, "data/ply_dismap_rgns.geojson")
+writeRaster(r_dmrgns_mer, "data/ply_dismap_rgns_mer.tif")
+# ply_boem_rgns <- read_sf("data/ply_boem_rgns.geojson")
+```
+
+## Mapping
+
+Originally ran from `/Users/bbest/Github/ecoquants/OceanAdapt/OceanAdapt.Rproj`, then 
+moved script and `data_tif` to `/Users/bbest/My Drive/projects/offhab/data/oceanadapt.rutgers.edu/data_tif`.
+
+https://apps-st.fisheries.noaa.gov/dismap/DisMAP.html
+
+> The predicted biomass density (kg per tow) distribution
+based on fishery-independent survey data. The
+distribution surface is created by applying the inverse
+distance weighting (IDW) interpolation algorithm to the
+observations in the survey for each species, regions, and
+season combination. The grid size is 2km x 2 km. The IDW
+approach smooths over multiple observations to
+interpolate the biomass across areas where the survey did
+not sample.
+
+```{r}
+# libraries ----
+librarian::shelf(
+  # fasterize, htmltools
+  dplyr, fs, glue, here, gstat, leaflet, mapview,
+  purrr, raster, readr, sf, stringr, tibble)
+
+select <- dplyr::select
+options(readr.show_col_types = F)
+
+# functions ----
+basehere <- function(path){
+  str_replace(path, paste0(here(), "/"), "")
+}
+
+get_sp_yr <- function(sp_key, yr){
+  # sp_key="ach-spi1"; yr=2019
+  
+  r_yr_tif <- glue("{dir_tmp}/{brgn}_{sp_key}_{yr}-1yr.tif")
+  
+  if (!file.exists(r_yr_tif)){
+    
+    pts <- pts_dmrgn_mer %>% 
+      filter(
+        sp_key  == !!sp_key,
+        year    == !!yr) 
+    
+    if (nrow(pts) == 0){
+      message(glue("    unavailable: {brgn}_{sp_key} for {yr}"))
+      return(NA)
+    }
+    
+    if (nrow(pts %>% filter(wtcpue_cbrt > 0)) == 0){
+      message(glue("    all zeros: {brgn}_{sp_key} for {yr}"))
+      return(NA)
+    }
+    
+    message(glue("    writing: {basename(r_yr_tif)}"))
+    mdl <- gstat(
+      formula = wtcpue_cbrt ~ 1, locations = pts, 
+      nmin = 10, nmax = 15, maxdist = 200000, set = list(idp = 1))
+    r_yr <- interpolate(r_brgn_mer, mdl) %>% 
+      mask(ply_brgn_mer) # mapview::mapview(r_yr)
+  
+    writeRaster(r_yr, r_yr_tif)
+  }
+  raster(r_yr_tif)
+}
+
+# paths ----
+dir_tif       <- "~/My Drive/projects/offhab/data/oceanadapt.rutgers.edu/data_tif"
+dir_tmp       <- "~/My Drive/projects/offhab/data/oceanadapt.rutgers.edu/tmp"
+dir_oa        <- "~/Github/ecoquants/OceanAdapt"
+d_spp_csv     <- path(dir_tif, "_spp.csv")
+d_spp_rgn_csv <- path(dir_tif, "_spp_rgn.csv")
+
+# species list ----
+if (any(!file.exists(d_spp_rgn_csv, d_spp_csv))){
+  
+  d_spp_rgn_0_csv <- here("data_clean/spplist.csv")
+  
+  d_spp_rgn <- read_csv(d_spp_rgn_0_csv) %>%
+    rename(
+      sp_sci = spp,
+      sp_cmn = common)
+   
+  # * get unique species key `sp_key` ----
+  sp_sci2key <- function(spp){
+    gs <- str_split(spp, "\\W")[[1]][1:2]
+    g <- str_sub(gs[1], end=3)
+    s <- str_sub(gs[2], end=3)
+    str_to_lower(glue("{g}-{s}"))
+  }
+  
+  d_spp <- d_spp_rgn %>%
+    group_by(sp_sci) %>%
+    summarise(sp_cmn = first(sp_cmn)) %>%
+    arrange(sp_sci, sp_cmn) %>%
+    mutate(
+      sp_key = map_chr(sp_sci, sp_sci2key))
+  
+  sp_keys_dup <- d_spp$sp_key[duplicated(d_spp$sp_key)]
+  
+  d_spp <- bind_rows(
+    d_spp %>%
+      filter(!sp_key %in% sp_keys_dup),
+    d_spp %>%
+      filter(sp_key %in% sp_keys_dup) %>%
+      group_by(sp_key) %>%
+      mutate(
+        i = row_number(),
+        sp_key2 = glue("{sp_key}{i}")) %>%
+      select(
+        sp_sci, sp_cmn, sp_key = sp_key2) ) %>%
+    select(sp_key, sp_sci, sp_cmn) %>%
+    arrange(sp_key, sp_sci)
+  
+  d_spp_rgn <- d_spp_rgn %>%
+    left_join(
+      d_spp %>%
+        select(sp_sci, sp_key),
+      by = "sp_sci")
+    
+  write_csv(d_spp, d_spp_csv)
+  write_csv(d_spp_rgn, d_spp_rgn_csv)
+}
+
+d_spp     <- read_csv(d_spp_csv)
+d_spp_rgn <- read_csv(d_spp_rgn_csv)
+
+# BOEM regions ----
+
+# list.files("data_clean", "dat_exploded.*rds$")
+
+ply_brgns <- read_sf(here("data/ply_boem_rgns.geojson")) # mapview(ply_brgns)
+ply_brgns_mer <- st_transform(ply_brgns, 3857)
+
+bregions <- c(
+  waor = "Washington/Oregon",       # light green
+  scal = "Southern California",     # dark green
+  natl = "North Atlantic",          # light blue
+  matl = "Mid Atlantic",            # dark blue
+  cgmx = "Central Gulf of Mexico")  # pink
+
+brgn_pal <- RColorBrewer::brewer.pal(
+  length(bregions), "Paired")
+names(brgn_pal) = names(bregions)
+
+brgn2dmrgns <- list(
+  cgmx = c("gmx"),
+  waor = c("wca"),
+  scal = c("wca"),
+  natl = c("nef","nes"),
+  matl = c("nef","nes","sef","ses","seu"))
+
+# iterate over BOEM regions ----
+for (brgn in names(bregions)){ # brgn = names(bregions)[1] # brgn = "cgmx"
+  bregion <- bregions[[brgn]]
+  message(glue("BOEM REGION: {brgn} ({bregion})"))
+  
+  # get data from all regions
+  stopifnot(brgn %in% names(brgn2dmrgns))
+  dmrgns <- brgn2dmrgns[[brgn]]
+  d_lst <- lapply(
+    dmrgns, function(dmrgn){ # dmrgn = dmrgns[1]
+      dmregion_rds <- dmregions_rds[[dmrgn]]
+      path_rds <- glue("{dir_oa}/data_clean/dat_exploded{dmregion_rds}.rds")
+      stopifnot(file_exists(path_rds))
+      d <- readRDS(path_rds) })
+  d_dmrgn <- bind_rows(d_lst)
+
+  pts_dmrgn <- d_dmrgn %>% 
+    # tibble() %>% 
+    mutate(
+      year        = as.integer(year),
+      wtcpue_cbrt = wtcpue^(1/3)) %>% # take the cube root
+    rename(
+      sp_sci = spp) %>%
+    left_join(
+      d_spp %>%
+        select(sp_sci, sp_key),
+      by = "sp_sci") %>%
+    st_as_sf(
+      coords = c("lon", "lat"), remove = T, crs = 4326) %>%
+    select(
+      year, sp_key, wtcpue_cbrt)  %>% 
+    filter(!is.na(sp_key)) # gmx nrow: 12,921,639 -> 2,525,473
+   # dropping: region, haulid, common, stratum, stratumarea, depth, wtcpue
+  pts_dmrgn_mer <- st_transform(pts_dmrgn, 3857)
+  
+  ply_brgn_mer <- ply_brgns_mer %>%
+    filter(RESA_summa == bregion)
+  r_brgn_mer <- raster(ply_brgn_mer, res=2000)
+  
+  # iterate over species ----
+  if (!all(dmregions_rds[dmrgns] %in% unique(d_spp_rgn$region))){
+    message("WHOAH! why are rgns not found?!")
+  }
+  sp_keys <- d_spp_rgn %>% 
+    filter(
+      !flagged,
+      sp_key != "na-na",
+      region %in% dmregions_rds[dmrgns]) %>% 
+    distinct(sp_key) %>% 
+    arrange(sp_key) %>% 
+    pull(sp_key)
+  
+  for (sp_key in sp_keys){ # sp_key = sp_keys[1]
+    
+    d_sp <- d_spp_rgn %>% 
+      filter(
+        region %in% dmregions_rds[dmrgns], 
+        sp_key == !!sp_key)
+    message(glue("SPECIES: {sp_key} ({d_sp$sp_sci}) {d_sp$sp_cmn}"), "\n")
+    
+    yrs <- pts_dmrgn_mer %>% 
+      st_drop_geometry() %>% 
+      tibble() %>% 
+      filter(sp_key == !!sp_key) %>% 
+      arrange(year) %>% 
+      pull(year) %>% 
+      unique()
+    if (length(yrs) == 0){
+      message("  WHOAH! why zero yrs?! SKIPPING")
+      next()
+    }
+    
+    #for (yr in yrs){ # yr = yrs[1]
+    for (yr in max(yrs)){ # yr =  max(yrs)
+      
+      message(glue("  YEAR: {yr}"))
+  
+      r_yrs_tif <- glue("{dir_tif}/{brgn}_{sp_key}_{yr}.tif")
+      
+      if (!file.exists(r_yrs_tif)){
+        message(glue("    TRYING: {basename(r_yrs_tif)}"))
+        
+        yrs <- (yr-2):(yr+2)
+        wts <- 3 - (abs(yr - yrs)) # 1 2 3 2 1
+        lst <- sapply(
+          yrs, function(yr){
+            get_sp_yr(sp_key, yr) })
+        idx <- !is.na(lst)
+        if (sum(idx) == 0){
+          message("    SKIPPING: no data")
+          next()
+        }
+        message(glue("    WRITING: {basename(r_yrs_tif)}"))
+        stk <- stack(lst[idx])
+        r_yrs <- raster::weighted.mean(stk, wts[idx], na.rm=F)
+        # mapview(r_yrs)
+        writeRaster(r_yrs, r_yrs_tif)
+      }
+    }
+  }
+}
+```
+
+```{r}
+# plot(r_idw)
+# r_idw <- r_idw^3
+
+# Create a continuous palette function
+pal <- colorNumeric(
+  palette = "viridis",
+  domain = values(r_idw),
+  na.color = "transparent", alpha = T)
+
+leaflet() %>%
+  addProviderTiles(providers$Esri.OceanBasemap) %>% 
+  addRasterImage(
+    r_idw, colors = pal, project = F) %>%
+  addLegend(
+    pal = pal,
+    values = values(r_idw),
+    title = paste0(
+      sp_common, 
+      "<br>∛wtcpue<br>",
+      min(yrs), ":", max(yrs)),
+    opacity = 1)
+```
+
+## Sum by region
+
+```{r}
+librarian::shelf(
+  dplyr, fs, glue, here, readr, stringr, tibble, tidyr)
+dir_tif <- "~/My Drive/projects/offhab/data/oceanadapt.rutgers.edu/data_tif"
+
+d_spp <- read_csv(path(dir_tif, "_spp.csv"))
+
+# get all tifs
+d_tifs <- tibble(
+  base_tif = list.files(dir_tif, "^[^_]{1}.*tif$"),
+  path_tif = path_norm(path(dir_tif, base_tif))) %>% 
+  separate(
+    base_tif, 
+    c("brgn", "sp_key", "yr", "ext"), sep = "[_\\.]")
+# ensure all species found
+stopifnot(length(setdiff(d_tifs$sp_key, d_spp$sp_key)) == 0)
+
+# filter by max year
+d_tifs_my <- d_tifs %>% 
+  group_by(brgn, sp_key) %>% 
+  filter(yr == max(yr)) %>% 
+  ungroup() 
+
+table(d_tifs_my$yr)
+table(d_tifs_my$brgn)
+table(d_tifs_my$sp_key)
+
+brgns <- sort(unique(d_tifs_my$brgn))
+for (brgn in brgns){ # brgn = brgns[1]
+# for (brgn in brgns[4:5]){ # brgn = brgns[1]
+  
+  bregion <- bregions[[brgn]]
+  ply_brgn_mer <- ply_brgns_mer %>%
+    filter(RESA_summa == bregion)
+
+  message(brgn)
+  
+  # stk_grd <- glue("{dir_tif}/_spp-biomass_{brgn}.grd")
+  # if (!file.exists(stk_grd)){
+  stk <- d_tifs_my %>% 
+    filter(brgn == !!brgn) %>% 
+    pull(path_tif) %>% 
+    stack()
+    # writeRaster(stk, stk_grd)
+  # }
+  # stk <- stack(stk_grd)
+  
+  message("  biomass")
+  r_sum <- sum(stk, na.rm = T)  %>% 
+    mask(ply_brgn_mer) # cgmx: 190 layers
+  writeRaster(r_sum, glue("{dir_tif}/_sum-biomass_{brgn}.tif"), overwrite=T)
+  
+  d_stk <- tibble(
+    lyr = names(stk) %>% 
+      str_replace(fixed("."), "-"),
+    avg = cellStats(stk, 'mean'),
+    max = cellStats(stk, 'max'),
+    sd  = cellStats(stk, 'sd'),
+    btm = pmax(avg - sd, 0) ) %>%  # vector of bottom threshold values,
+    # n0  = cellStats(stk, function(x, na.rm = T){
+    #   sum(x==0, na.rm = na.rm) }) ) %>% 
+    separate(
+      lyr, remove = F,
+      c("brgn", "sp_key", "yr"), sep = "[_\\.]")
+  write_csv(d_stk, glue("{dir_tif}/_spp-cellstats_{brgn}.csv"))
+  
+  message("  nspp")
+  stk_pa <- stk >= d_stk$btm # presence-absence (1 or 0) stack of species based on bottom
+  r_nspp <- sum(stk_pa, na.rm = T) %>% 
+    mask(ply_brgn_mer) # mapview(r_nspp)
+  writeRaster(r_nspp, glue("{dir_tif}/_nspp_{brgn}.tif"), overwrite=T)
+  
+  message("  product: nspp * biomass")
+  r_prod <- r_nspp * r_sum # mapview(r_prod)
+  writeRaster(r_nspp, glue("{dir_tif}/_prod_{brgn}.tif"), overwrite=T)
+}
+```
+
+## Species Taxonomy: `worrms`
+
+```{r}
+librarian::shelf(
+  dplyr, purrr, worrms)
+
+d_spp_my <- d_spp %>% 
+  filter(
+    sp_key %in% d_tifs_my$sp_key)
+
+# drop weirdos
+sp_sci_skip <- c("Fish unident.", "Purple striated anemone", "Unsorted shab", "Crustacea shrimp", "Red striated")
+d_spp_my <- d_spp_my %>% 
+    filter(
+      !sp_sci %in% sp_sci_skip) %>% 
+    mutate(
+      sp_sci = recode(
+        sp_sci, 
+        `Tube worm`= "Ficopomatus enigmaticus")) %>% 
+
+# get taxonomic records from World Registry of Marine Species (WorRMS),
+#   which only works up to 50 names at a time
+d_lst <- list(); i_beg = 1
+i_max <- ceiling(nrow(d_spp_my)/50)
+for (i in 1:i_max){ # i = 1
+  i_beg = (i - 1) * 50 + 1 
+  i_end = min(i * 50, nrow(d_spp_my))
+  message(glue("wm_records_taxamatch() for {i_beg}:{i_end} of {nrow(d_spp_my)}"))
+  
+  d_lst[[i]] <- d_spp_my %>% 
+    mutate(
+      wm_recs = wm_records_taxamatch(sp_sci))
+}
+d_spp_my_wm <- bind_rows(d_lst) %>% 
+  unnest(wm_recs) %>% 
+  arrange(sp_key, status)
+# get first of duplicates, with preference for status = "accepted"
+d_spp_my_wm <- d_spp_my_wm[!duplicated(d_spp_my_wm$sp_key),]
+
+# species without any worms data; oh well
+sp_key_na <- setdiff(d_spp_my$sp_key, d_spp_my_wm$sp_key)
+d_spp_my %>% 
+  filter(sp_key %in% sp_key_na)
+#    sp_key  sp_sci                  sp_cmn                 
+#    <chr>   <chr>                   <chr>                  
+#  1 can-ant Cancer anthonyi         yellow rock crab       
+#  2 chr-fus Chrysaora fuscens       NA                     
+#  3 cru-shr Crustacea shrimp        crustaceans            
+#  4 fis-uni Fish unident.           NA                     
+#  5 inv-spp Invertebrata spp.       invertebrate           
+#  6 pod-sid Podochela sidneyi       shortfinger neck crab  
+#  7 pur-str Purple striated anemone Purple striated anemone
+#  8 red-str Red striated            NA                     
+#  9 ter-spp Terebratellacea spp.    brachiopod             
+# 10 tra-spp Trachypeneus spp.       trachypeneid shrimps   
+# 11 uns-sha Unsorted shab           NA                     
+
+write_csv(d_spp_my_wm, path(dir_tif, "_spp_worrms.csv"))
+
+d_spp_attr <- wm_attr_data_(id = d_spp_my_wm$AphiaID)
+write_csv(d_spp_attr, path(dir_tif, "_spp_worrms_attr.csv"))
+
+table(d_spp_attr$measurementType)
+#            AMBI ecological group                        Body size          Body size (qualitative)                         Brooding 
+#                               16                              593                               13                                1 
+#                      Development                      Feedingtype                 Functional group    Species importance to society 
+#                                1                                5                               36                              650 
+# Supporting structure & enclosure 
+#                                1 
+
+
+table(d_spp_my_wm[16])
+# kingdom
+#  Animalia Chromista 
+#       644         1
+
+table(d_spp_my_wm[17])
+# phylum
+#      Annelida    Arthropoda   Brachiopoda      Chordata      Cnidaria    Ctenophora Echinodermata      Mollusca    Ochrophyta      Porifera 
+#             5            84             1           378            39             1            75            57             1             4 
+length(table(d_spp_my_wm[17])) 
+# 10
+
+table(d_spp_my_wm[18])
+# class
+#       Actinopteri          Anthozoa        Ascidiacea        Asteroidea Bacillariophyceae          Bivalvia       Cephalopoda         Crinoidea 
+#               332                28                 1                45                 1                 8                31                 1 
+#        Echinoidea    Elasmobranchii        Gastropoda    Hexactinellida       Holocephali     Holothuroidea          Hydrozoa      Malacostraca 
+#                 9                35                17                 3                 1                 8                 2                83 
+#       Merostomata            Myxini       Ophiuroidea        Polychaeta         Scyphozoa     Solenogastres         Thaliacea 
+#                 1                 4                11                 3                 9                 1                 3 
+length(table(d_spp_my_wm[18])) 
+# 23
+
+table(d_spp_my_wm[19])
+# order ...
+length(table(d_spp_my_wm[19])) 
+# 101
+
+spp_classes <- d_spp_my_wm$class %>% unique() %>% na.omit() %>% sort()
+
+d_classes <- wm_records_names(spp_classes)
+
+d_classes <- bind_rows(d_classes)
+
+d_classes_cmn <- wm_common_id_(id = d_classes$AphiaID)
+
+d_classes %>% 
+  select(AphiaID, class = scientificname) %>% 
+  left_join(
+    d_classes_cmn %>% 
+      filter(language_code == "eng") %>% 
+      mutate(
+        AphiaID = as.integer(id)) %>% 
+      select(AphiaID, vernacular),
+    by = "AphiaID") %>% 
+  write_csv(path(dir_tif, "_spp_class_vernacular.csv"))
+
+# _spp_class_vernacular.csv -> _spp_class_common.csv: 
+#    manually googled and selected
+
+read_csv(path(dir_tif, "_spp_class_common.csv")) %>% 
+  # select(-n_taxa) %>% 
+  left_join(
+    d_spp_my_wm %>% 
+      group_by(class) %>% 
+      summarize(n_taxa = n()),
+    by = "class") %>% 
+  write_csv(path(dir_tif, "_spp_class_common.csv"))
+```
+
+
+## Species extinction risk: `worrms`
+
+```{r}
+librarian::shelf(
+  rredlist)
+
+rredlist::rl_use_iucn()
+
+Sys.setenv(
+  IUCN_REDLIST_KEY = readLines("~/My Drive/private/iucnredlist.org_api_token.txt"))
+Sys.getenv("IUCN_REDLIST_KEY")
+
+# alo-sap | Alosa sapidissima | American shad | 158670
+# https://apiv3.iucnredlist.org/api/v3/species/Alosa%20sapidissima?token=fb963555580923eb0f0b2778060e5bcbd0cca50c0b21c416ed7ff68da9c25c11
+# https://apiv3.iucnredlist.org/api/v3/species/id/191206?token=fb963555580923eb0f0b2778060e5bcbd0cca50c0b21c416ed7ff68da9c25c11
+
+d_rl <- tibble(
+  scientificname = d_spp_my_wm$scientificname) %>% 
+  mutate(
+    rl = map(scientificname, function(x){
+      message(x)
+      y <- rl_search(name = x)
+      y$result }),
+    rl_len = map_int(rl, length)) %>% 
+  filter(
+    d_len > 0) %>% 
+  select(-rl_len) %>% 
+  unnest(rl)
+
+for (i in 1:nrow(d_spp_my_wm)){ # i = 1
+  sp_sci <- d_spp_my_wm$scientificname[i]
+  sp_key <- d_spp_my_wm$sp_key[i]
+  
+  x <- rl_search(name = sp_sci)
+  if (length(x$result) > 0){
+    message(glue("{i}/{nrow(d_spp_my_wm)} {sp_key} ({sp_sci}): writing csv"))
+    write_csv(x$result, glue("{dir_tmp}/rl_{sp_key}.csv"))
+  } else {
+    message(glue("{i}/{nrow(d_spp_my_wm)} {sp_key} ({sp_sci}): MISSING"))
+  }
+}
+
+d_rl <- list.files(dir_tmp, "^rl_.*\\.csv$", full.names = T) %>% 
+    map_df(~read_csv(.))
+write_csv(d_rl, path(dir_tif, "_spp_redlist.csv"))
+
+table(d_rl$category)
+table(d_rl$criteria)
+```
+
+## `rfishbase`
+
+
+```{r}
+librarian::shelf(
+  rfishbase)
+
+fb_tables()
+
+d_spp <- read_csv(glue("{dir_tif}/_spp_worrms.csv"))
+
+View(d_spp)
+fb_tbl("species") %>% 
+  names()
+
+spp_sci <- d_spp %>% 
+  filter(rank == "Species") %>% 
+  pull(scientificname)
+
+spp_fb <- fb_tbl("species") %>% 
+  mutate(sci_name = paste(Genus, Species)) %>%
+  filter(sci_name %in% spp_sci) 
+write_csv(spp_fb, glue("{dir_tif}/_spp_fb.csv"))
+
+# http://www.fishbase.us/manual/English/FishbaseThe_FOOD_ITEMS_table.htm
+d_est <- rfishbase::estimate(spp_sci)
+write_csv(d_est, glue("{dir_tif}/_spp_fb_estimate.csv"))
+
+# http://www.fishbase.org/manual/english/fishbasethe_ecology_table.htm
+d_eco <- rfishbase::ecology(spp_sci)
+write_csv(d_eco, glue("{dir_tif}/_spp_fb_ecology.csv"))
+
+# http://www.fishbase.org/manual/english/fishbasethe_popgrowth_table.htm
+d_popgrowth <- rfishbase::popgrowth(spp_sci)
+write_csv(d_popgrowth, glue("{dir_tif}/_spp_fb_popgrowth.csv"))
+
+d_stocks <- rfishbase::stocks(spp_sci)
+write_csv(d_stocks, glue("{dir_tif}/_spp_fb_stocks.csv"))
+```
+
+## `sdmpredictors`
+
+## `aquamaps`
+

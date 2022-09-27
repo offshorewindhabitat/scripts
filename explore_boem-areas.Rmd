@@ -22,7 +22,8 @@ Downloaded geodatabase from [Renewable Energy GIS Data \| Bureau of Ocean Energy
 
 ```{r}
 librarian::shelf(
-  dplyr, DT, glue, mapview, rgdal, sf)
+  dplyr, DT, glue, mapview, rgdal, sf, stringr)
+select = dplyr::select
 mapviewOptions(fgb = F)
 
 dir_data <- "/Users/bbest/My Drive/projects/offhab/data"
@@ -48,11 +49,11 @@ boem_lns_lse <- read_sf(gdb, lyrs[5]) %>%
     fld1 = "LEASE_NUMBER",
     val1 = LEASE_NUMBER) %>% 
   select(src, fld1, val1) 
-mapview(boem_lns_lse)
+# mapview(boem_lns_lse)
 
 boem_lns <- rbind(
   boem_lns_pln,
-  boem_lns_lse)
+  boem_lns_lse) # mapview(boem_lns)
 
 boem_shp_lse <- read_sf(gdb, lyrs[2]) %>% 
   filter(LEASE_TYPE == "Commercial") %>% 
@@ -77,7 +78,12 @@ boem_shp_pln <- read_sf(gdb, lyrs[3]) %>%
 boem_shp <- rbind(
   boem_shp_lse,
   boem_shp_pln) %>% 
-  filter(str_trim(val1) != "")
+  filter(str_trim(val1) != "") # mapview(boem_shp)
+
+glue("{dir_data}/boem.gov/")
+
+~/My Drive/projects/offhab/data/boem.gov
+
 ```
 
 # GIS Data
@@ -201,8 +207,9 @@ Compare to regions: “2019-2024 Draft Proposed Program Areas”
 
 ```{r}
 librarian::shelf(
-  ggplot2, ggrepel,
-  rnaturalearth, rnaturalearthdata, ropensci/rnaturalearthhires,
+  ggplot2, 
+  # ggrepel, rnaturalearth, rnaturalearthdata,
+  # ropensci/rnaturalearthhires,
   purrr, stringr, tidyr)
 
 sf::sf_use_s2(FALSE) # https://stackoverflow.com/questions/68478179/how-to-resolve-spherical-geometry-failures-when-joining-spatial-data
@@ -238,6 +245,7 @@ ply_rgns <- ply_rgns %>%
   mutate(
     rgn    = RESA_summa,
     assess = rgn %in% rgns)
+write_sf(ply_rgns, "data/ply_boem_rgns.geojson")
 # mapview(ply_rgns, zcol="rgn")
 
 rgns_lbl <- ply_rgns %>% 

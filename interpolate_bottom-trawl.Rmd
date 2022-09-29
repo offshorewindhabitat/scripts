@@ -552,7 +552,18 @@ read_csv(path(dir_tif, "_spp_class_common.csv")) %>%
 ```
 
 
-## Species extinction risk: `worrms`
+## Species extinction risk: `rredlist`
+
+* [rredlist • rredlist](https://docs.ropensci.org/rredlist/articles/rredlist.html)
+* [API - IUCN Red List of Threatened Species](https://apiv3.iucnredlist.org/spatial)
+* [API - IUCN Red List of Threatened Species](https://apiv3.iucnredlist.org/api/v3/docs#regions)
+
+TODO:
+- https://github.com/cardosopmb/red/blob/master/R/red.R#L714-L876 \
+  Prediction of potential species distributions using maximum entropy (maxent)
+  * [red - an R package to facilitate species red list assessments according to the IUCN criteria](https://bdj.pensoft.net/article/20530/)
+  * https://github.com/cardosopmb?tab=repositories
+  * [‪Pedro Cardoso‬ - ‪Google Scholar‬](https://scholar.google.com/citations?hl=en&user=WyB_hggAAAAJ&view_op=list_works&sortby=pubdate)
 
 ```{r}
 librarian::shelf(
@@ -642,7 +653,458 @@ d_stocks <- rfishbase::stocks(spp_sci)
 write_csv(d_stocks, glue("{dir_tif}/_spp_fb_stocks.csv"))
 ```
 
+## `aquamaps`
+
+* [https://raquamaps.github.io](https://raquamaps.github.io/)
+* [https://raquamaps.github.io/raquamaps-intro.html](https://raquamaps.github.io/raquamaps-intro.html)
+* [Curated Data From AquaMaps.Org • aquamapsdata](https://raquamaps.github.io/aquamapsdata/index.html)
+
+```{r}
+# dependency for aquamapsdata:
+#  - Terminal: brew install gnupg
+#  - R: install.packages("rcrypt")
+librarian::shelf(
+  raquamaps/raquamaps,
+  raquamaps/aquamapsdata)
+
+data(package = "raquamaps")
+default_db("sqlite")
+# /Users/bbest/Library/Application Support/aquamaps/am.db
+```
+
+```
+<SQLiteConnection>
+  Path: /Users/bbest/Library/Application Support/aquamaps/am.db
+  Extensions: TRUE
+```
+
+```{r, eval=FALSE}
+# downloads about 2 GB of data, approx 10 GB when unpacked
+download_db()
+```
+
+```
+<SQLiteConnection>
+  Path: /Users/bbest/Library/Application Support/aquamaps/am.db
+  Extensions: TRUE
+Error in split_lines(text) : 
+  lazy-load database '/Library/Frameworks/R.framework/Versions/4.2-arm64/Resources/library/xfun/R/xfun.rdb' is corrupt
+In addition: Warning message:
+In split_lines(text) : internal error -3 in R_decompress1
+Error in split_lines(text) : 
+  lazy-load database '/Library/Frameworks/R.framework/Versions/4.2-arm64/Resources/library/xfun/R/xfun.rdb' is corrupt
+In addition: Warning messages:
+1: In split_lines(text) : restarting interrupted promise evaluation
+2: In split_lines(text) : internal error -3 in R_decompress1
+```
+
+```{r}
+librarian::shelf(dplyr)
+# fuzzy search allows full text search operators AND, OR, NOT and +
+# see https://www.sqlitetutorial.net/sqlite-full-text-search/
+am_search_fuzzy(search_term = "trevally") %>% pull(key)
+
+# exact search without parameters returns all results
+nrow(am_search_exact())
+
+# exact search giving NULL params shows examples of existing values
+# here we see what combinations are present in the dataset for 
+# angling, diving, dangerous, highseas, deepwater organisms
+am_search_exact(
+  angling = NULL, diving = NULL, dangerous = NULL, 
+  deepwater = NULL, highseas = NULL, m_invertebrates = NULL)
+
+# exact search without NULL params, specifying values
+hits <- 
+  am_search_exact(angling = 1, diving = 1, dangerous = 0)
+
+# display results
+display <- 
+  hits %>% mutate(binomen = paste(Genus, Species)) %>%
+  select(SpeciesID, binomen, SpecCode, FBname)
+
+knitr::kable(display)
+```
+
+### Species maps
+
+```{r}
+librarian::shelf(
+  aquamapsdata, leaflet, raster)
+
+# get the identifier for the species
+key <- am_search_fuzzy("bluespotted")$key
+ras <- am_raster(key)
+
+# show the native habitat map
+am_map_leaflet(ras, title = "Bluespotted trevally") %>%
+  leaflet::fitBounds(lng1 = 100, lat1 = -46, lng2 = 172, lat2 = -2)
+```
+
+### Biodiversity Maps
+
+```{r}
+keys <- am_search_exact(Genus = "Caranx")$SpeciesID
+
+ras <- am_raster(keys, fun = "count")
+
+am_map_leaflet(ras, title = "Caranx") %>%
+  leaflet::fitBounds(lng1 = 100, lat1 = -46, lng2 = 172, lat2 = -2)
+
+am_citation("md")
+```
+
+### Locations in cells and the half degree cell “authority file” table
+
+```{r}
+am_hcaf() %>% head(1) %>% collect() %>% names()
+
+# compute depth across all cells
+am_hcaf() %>% 
+  summarize(depth = mean(DepthMean, na.rm = TRUE)) %>% 
+  collect() %>% 
+  pull(depth)
+
+# cells with a depth value larger than 4000
+deepwater <- 
+  am_hcaf() %>% filter(DepthMean > 4000) %>% pull(CsquareCode)
+
+# some of the on average deepest locations
+deepwater
+
+# species likely to occur in deepwater location(s)
+deepwater_species <- am_species_in_csc(deepwater, min_prob = 0.5) # SLOW! # tibble: 16,266 × 2
+deepwater_species
+
+key <- deepwater_species$SpeciesID[2:4] # 1st: "W-Msc-342354" Error: near "W": syntax error
+am_search_exact(SpeciesID = key[1])
+```
+
+### Species preferences or environmental envelope
+
+```{r}
+# use one or more keys for species
+key <- deepwater_species$SpeciesID[2]
+am_hspen() %>% filter(SpeciesID == key) %>% head(1) %>% collapse%>% glimpse()
+```
+
+
+```
+Rows: ??
+Columns: 56
+Database: sqlite 3.39.3 [/Users/bbest/Library/Application Support/aquamaps/am.db]
+$ SpeciesID       <chr> "Fis-24154"
+$ Speccode        <int> 2735
+$ LifeStage       <chr> "adults"
+$ FAOAreas        <chr> "21, 27, 31, 34, 41, 47, 48, 51, 57, 61, 67, 71, 77, 81, 87"
+$ FAOComplete     <int> NA
+$ NMostLat        <dbl> 55
+$ SMostLat        <dbl> -61
+$ WMostLong       <dbl> NA
+$ EMostLong       <dbl> NA
+$ DepthYN         <int> 1
+$ DepthMin        <int> 777
+$ DepthPrefMin    <int> 952
+$ DepthPrefMax    <int> 1350
+$ DepthMax        <int> 2121
+$ MeanDepth       <int> 0
+$ Pelagic         <int> 1
+$ TempYN          <int> 1
+$ TempMin         <dbl> -1.21
+$ TempPrefMin     <dbl> 1.03
+$ TempPrefMax     <dbl> 6.29
+$ TempMax         <dbl> 28.94
+$ SalinityYN      <int> 1
+$ SalinityMin     <dbl> 33.08
+$ SalinityPrefMin <dbl> 34.33
+$ SalinityPrefMax <dbl> 35.33
+$ SalinityMax     <dbl> 37.32
+$ PrimProdYN      <int> 1
+$ PrimProdMin     <dbl> -0.67
+$ PrimProdPrefMin <dbl> 0.33
+$ PrimProdPrefMax <dbl> 15.27
+$ PrimProdMax     <dbl> 67.43
+$ IceConYN        <int> 1
+$ IceConMin       <dbl> -1
+$ IceConPrefMin   <dbl> 0
+$ IceConPrefMax   <dbl> 0
+$ IceConMax       <dbl> 0
+$ OxyYN           <int> 1
+$ OxyMin          <dbl> 1.96
+$ OxyPrefMin      <dbl> 128.98
+$ OxyPrefMax      <dbl> 265.24
+$ OxyMax          <dbl> 400.38
+$ LandDistYN      <int> 0
+$ LandDistMin     <dbl> 1
+$ LandDistPrefMin <dbl> 98
+$ LandDistPrefMax <dbl> 1181
+$ LandDistMax     <dbl> 2057
+$ Remark          <chr> "FAO areas,bounding box and/or pelagic flag based on last review."
+$ DateCreated     <chr> "2020-04-26 00:00:00"
+$ DateModified    <chr> NA
+$ expert_id       <int> NA
+$ DateExpert      <chr> NA
+$ Layer           <chr> "b"
+$ Rank            <int> 1
+$ MapOpt          <int> 1
+$ ExtnRuleYN      <int> 1
+$ Reviewed        <int> NA
+```
+
+## DEM: 3 arc sec via `ncdf4`
+
+* [Coastal Relief Model | NCEI](https://www.ngdc.noaa.gov/mgg/coastal/crm.html)
+* [opendap.R](https://rstudio-pubs-static.s3.amazonaws.com/350043_e077809976ee44e19f53f146ad223a60.html)
+
+
+### test w/ NGDC & GEBCO
+
+```{r}
+librarian::shelf(
+  dplyr, glue, here, mapview, ncdf4, raster, sf, tibble, tidyr)
+
+d_nc <- "https://www.ngdc.noaa.gov/thredds/dodsC/crm/crm_vol1.nc"
+d <- nc_open(d_nc)
+names(d$var) # z
+names(d$dim) # x, y
+
+ply_brgns <- read_sf(here("data/ply_boem_rgns.geojson")) # mapview(ply_brgns)
+
+ply_brgn <- ply_brgns %>% 
+  # filter(assess) %>% pull(rgn) %>% paste(collapse = ", ")
+  #   Mid Atlantic, North Atlantic, Central Gulf of Mexico, Southern California, Washington/Oregon
+  filter(rgn == "North Atlantic")
+b <- st_bbox(ply_brgn)
+
+x <- ncvar_get(d, "x")
+y <- ncvar_get(d, "y")
+ix <- tibble(
+  x = x) %>% 
+  rowid_to_column("i") %>% 
+  filter(
+    x >= b["xmin"],
+    x <= b["xmax"]) %>% 
+  pull(i)
+iy <- tibble(
+  y = y) %>% 
+  rowid_to_column("i") %>% 
+  filter(
+    y >= b["ymin"],
+    y <= b["ymax"]) %>% 
+  pull(i)
+
+z <- ncvar_get(
+  d, "z", 
+  start = c(min(ix), min(iy)), 
+  count = c(length(ix), length(iy)))
+r <- raster(
+  list(x = x[ix], y = y[iy], z = z),
+  crs = 4326) %>% 
+  mask(ply_brgn) 
+mapview(r) +
+  mapview(ply_brgn)
+natl_vol1_tif <- glue("~/My Drive/projects/offhab/data/ngdc_crm/natl_vol1.tif")
+writeRaster(r, natl_vol1_tif)
+
+## Loading required package: sp
+plot(raster(list(x = X[xdx], y = Y[ydx], z = SST)))
+
+ply_brgn <- ply_brgns %>% 
+  # filter(assess) %>% pull(rgn) %>% paste(collapse = ", ")
+  #   Mid Atlantic, North Atlantic, Central Gulf of Mexico, Southern California, Washington/Oregon
+  filter(rgn == "Southern California")
+b <- st_bbox(ply_brgn)
+
+gebco_nc = "~/My Drive/projects/bbnj/data/raw/gebco.net_depth/GEBCO_2014_2D.nc"
+
+d <- nc_open(gebco_nc)
+names(d$var) # elevation
+names(d$dim) # lat, lon
+x <- ncvar_get(d, "lon")
+y <- ncvar_get(d, "lat")
+ix <- tibble(
+  x = x) %>% 
+  rowid_to_column("i") %>% 
+  filter(
+    x >= b["xmin"],
+    x <= b["xmax"]) %>% 
+  pull(i)
+iy <- tibble(
+  y = y) %>% 
+  rowid_to_column("i") %>% 
+  filter(
+    y >= b["ymin"],
+    y <= b["ymax"]) %>% 
+  pull(i)
+
+elev <- ncvar_get(
+  d, "elevation", 
+  start = c(min(ix), min(iy)), 
+  count = c(length(ix), length(iy)))
+r <- raster(
+  list(x = x[ix], y = y[iy], z = elev),
+  crs = 4326)
+r <- r %>% 
+  # mask(r > 0, maskvalue=1) 
+  mask(ply_brgn) 
+mapview(r) +
+  mapview(ply_brgn)
+socal_tif <- glue("~/My Drive/projects/offhab/data/gebco.net/socal.tif")
+writeRaster(r, socal_tif)
+```
+
+
+### loop brgns over NGDC
+
+```{r}
+librarian::shelf(
+  dplyr, glue, here, mapview, ncdf4, purrr, raster, 
+  rlang, sf, tibble, tidyr)
+select = dplyr::select
+
+ply_brgns <- read_sf(here("data/ply_boem_rgns.geojson")) %>% 
+  filter(assess) %>% 
+  select(
+    bregion = `RESA_summa`,
+    brgn    = `MMS_PLAN_A`)
+
+# ply_brgn <- ply_brgns %>% 
+  # filter(assess) %>% pull(rgn) %>% paste(collapse = ", ")
+  #   Mid Atlantic, North Atlantic, Central Gulf of Mexico, Southern California, Washington/Oregon
+
+
+crm_vol_bbox_sf <- function(vol){
+  # vol = 1
+  u <- glue("https://www.ngdc.noaa.gov/thredds/dodsC/crm/crm_vol{vol}.nc")
+  d <- nc_open(u)
+  x <- ncvar_get(d, "x")
+  y <- ncvar_get(d, "y")
+  
+  st_bbox(
+    c(xmin = min(x), 
+      xmax = max(x), 
+      ymin = min(y), 
+      ymax = max(y)), 
+    crs = st_crs(4326)) %>% 
+    st_as_sfc() %>% 
+    st_as_sf()
+}
+# x <- crm_vol_bbox(1)
+
+vols <- 1:8
+crm_vols <- map(vols, crm_vol_bbox_sf) %>% 
+  bind_rows() %>% 
+  select(
+    geom = x) %>% 
+  mutate(
+    vol = vols)
+# mapview(crm_vols)
+
+crm_vol_raster <- function(vol, ply){
+  b <- st_bbox(ply)
+  
+  u <- glue("https://www.ngdc.noaa.gov/thredds/dodsC/crm/crm_vol{vol}.nc")
+  d <- nc_open(u)
+  
+  x <- ncvar_get(d, "x")
+  y <- ncvar_get(d, "y")
+  ix <- tibble(
+    x = x) %>% 
+    rowid_to_column("i") %>% 
+    filter(
+      x >= b["xmin"],
+      x <= b["xmax"]) %>% 
+    pull(i)
+  iy <- tibble(
+    y = y) %>% 
+    rowid_to_column("i") %>% 
+    filter(
+      y >= b["ymin"],
+      y <= b["ymax"]) %>% 
+    pull(i)
+
+  if (length(ix) == 0 | length(iy) == 0 )
+    return(NA)
+  
+  z <- ncvar_get(
+    d, "z", 
+    start = c(min(ix), min(iy)), 
+    count = c(length(ix), length(iy)))
+  r <- raster(
+    list(x = x[ix], y = y[iy], z = z),
+    crs = 4326) %>% 
+    mask(ply)
+}
+
+# TODO: iterate over BOEM regions
+for (brgn in ply_brgns$brgn){ # brgn = ply_brgns$brgn[1]
+
+  message(brgn)
+  tif <- glue("~/My Drive/projects/offhab/data/ngdc.noaa.gov/crm/{brgn}.tif")
+  
+  if (file.exists(tif)){
+    message("  tif exists, SKIP")
+    next()
+  }
+    
+  ply <- ply_brgns %>% 
+    filter(brgn == !!brgn)
+  
+  x_vols <- st_intersects(ply, crm_vols)[[1]]
+  
+  mapview(ply) +
+    mapview(
+      crm_vols %>% filter(vol %in% x_vols))
+  rs <- list()
+  for (i in seq_along(x_vols)){ # vol = x_vols[1]
+    vol = x_vols[i]
+    message(glue("  crm_vol_raster({vol}, ply)"))
+    rs[[i]] <- crm_vol_raster(vol, ply)
+  }
+  
+  message(glue("  mosaic"))
+  rs <- rs[!is.na(rs)]
+  if (length(rs) > 1){
+    r <- exec("mosaic", !!!rs, fun = mean)
+  } else {
+    r <- rs[[1]]
+  }
+
+  message(glue("  write"))
+  writeRaster(r, tif)
+  
+  # mapview(r) +
+  #   mapview(ply_brgn)
+}
+```
+
+## DEM: GEBCO 
+
+```{r}
+elev <- ncvar_get(
+  d, "elevation", 
+  start = c(min(ix), min(iy)), 
+  count = c(length(ix), length(iy)))
+r <- raster(
+  list(x = x[ix], y = y[iy], z = elev),
+  crs = 4326)
+r <- r %>% 
+  # mask(r > 0, maskvalue=1) 
+  mask(ply_brgn) 
+mapview(r) +
+  mapview(ply_brgn)
+socal_tif <- glue("~/My Drive/projects/offhab/data/gebco.net/socal.tif")
+writeRaster(r, socal_tif)
+```
+
+
+
+
 ## `sdmpredictors`
 
-## `aquamaps`
+
+## Extract Rasters to Wind Lease Areas
+
+* [exactextractr](https://isciences.gitlab.io/exactextractr/)
+
 

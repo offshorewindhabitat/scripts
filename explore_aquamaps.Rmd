@@ -36,8 +36,8 @@ librarian::shelf(
 
 
 # data(package = "raquamaps")
-con_sq <- default_db("sqlite") # /Users/bbest/Library/Application Support/aquamaps/am.db
-dbListTables(con)
+con_sl <- default_db("sqlite") # /Users/bbest/Library/Application Support/aquamaps/am.db
+dbListTables(con_sl)
 ```
 
 ```
@@ -49,7 +49,7 @@ dbListTables(con)
 
 ```{r}
 # get cells and species list per region
-t_hcaf <- tbl(con, "hcaf_r")
+t_hcaf <- tbl(con_sl, "hcaf_r")
 
 pts_hcaf <- t_hcaf %>% 
   select(ID, CsquareCode, CenterLong, CenterLat) %>% 
@@ -62,10 +62,10 @@ r_g <- rast(
   resolution = c(0.5))
 
 r_hcaf <- rasterize(pts_hcaf, r_g, field = "ID")
+
 ply_hcaf <- as.polygons(r_hcaf) %>% 
   st_as_sf() %>% 
-  rename(ID = "lyr.1") # %>% 
-ply_hcaf <- ply_hcaf %>%
+  rename(ID = "lyr.1") %>%
   left_join(
     pts_hcaf %>% 
       st_drop_geometry() %>% 
@@ -80,9 +80,12 @@ ply_brgns <- read_sf(ply_brgns_geo) %>%
   rename(brgn = MMS_PLAN_A)
 ply_brgn <- ply_brgns %>% 
   filter(brgn == !!brgn)
-mapView(ply_brgn)
+# mapView(ply_brgn)
 
-ply_hcaf_brgn <- st_intersection(ply_hcaf, ply_brgn)
+ply_hcaf_brgn <- st_intersection(
+  ply_hcaf, 
+  ply_brgn %>% 
+    select(geometry))
 
 mapview(ply_hcaf_brgn)
 
@@ -91,22 +94,6 @@ tbl(con, "hcaf_r") %>%
   pull(CsquareCode) # "7208:456:4"
 
 c(x1, y1, x2, y2) %<-% st_bbox(ply_hcaf_brgn) %>% as.numeric()
-
-system.time({
-c_spp <- tbl(con, "hcaf_species_native") %>% 
-  filter(
-    CenterLong  > x1,
-    CenterLong  < x2,
-    CenterLat   > y1,
-    CenterLat   < y2,
-    Probability > 0.5) %>% 
-  group_by(CsquareCode) %>% 
-  summarize(
-    n_spp = n()) %>% 
-  collect() %>% 
-  filter(
-    CsquareCode %in% ply_hcaf_brgn$CsquareCode)
-}) # 4.1 minutes
 
 # brew services start postgresql
 # brew services stop postgresql
@@ -118,34 +105,44 @@ con_pg <- DBI::dbConnect(
   port     = 5432)
 dbListTables(con_pg)
 
-tbl <- "hcaf_species_native"
-d <- dbReadTable(con_sq, tbl)
-dbWriteTable(con_pg, tbl, d)
+# write from sqlite to postgresql database
+# tbl <- "hcaf_species_native"
+# d <- dbReadTable(con_sl, tbl)
+# dbWriteTable(con_pg, tbl, d)
 
+# create indexes
 dbSendQuery(
-  con, 
-  "CREATE INDEX IF NOT EXISTS hcaf_species_native_CenterLong_idx ON hcaf_species_native(CenterLong)")
+  con_pg, 
+  'CREATE INDEX IF NOT EXISTS hcaf_species_native_CenterLong_idx ON hcaf_species_native("CenterLong")')
 dbSendQuery(
-  con, 
-  "CREATE INDEX IF NOT EXISTS hcaf_species_native_CenterLat_idx ON hcaf_species_native(CenterLat)")
+  con_pg, 
+  'CREATE INDEX IF NOT EXISTS hcaf_species_native_CenterLat_idx ON hcaf_species_native("CenterLat")')
 dbSendQuery(
-  con, 
-  "CREATE INDEX IF NOT EXISTS hcaf_species_native_CsquareCode_idx ON hcaf_species_native(CsquareCode)")
+  con_pg, 
+  'CREATE INDEX IF NOT EXISTS hcaf_species_native_CsquareCode_idx ON hcaf_species_native("CsquareCode")')
 
+# summarize in postgres (1.7 sec vs 4.1 min in sqlite)
+c_spp <- tbl(con_pg, "hcaf_species_native") %>% 
+  filter(
+    CenterLong  >= x1,
+    CenterLong  <= x2,
+    CenterLat   >= y1,
+    CenterLat   <= y2,
+    Probability >= 0.5) %>% 
+  group_by(CsquareCode) %>% 
+  summarize(
+    n_spp = n()) %>% 
+  collect() %>% 
+  filter(
+    CsquareCode %in% ply_hcaf_brgn$CsquareCode) %>% 
+  mutate(
+    n_spp = as.integer(n_spp))
 
-
-ply_hcaf_brgn <- ply_hcaf_brgn %>% 
+p <- ply_hcaf_brgn %>% 
   left_join(
     c_spp,
     by = "CsquareCode")
-mapview(ply_hcaf_brgn, zcol="n_spp")
-
-ply_hcaf_brgn %>% 
-  
-  
-
-
-
+mapview(p, zcol="n_spp")
 ```
 
 

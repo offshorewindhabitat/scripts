@@ -1,0 +1,316 @@
+---
+title: "Analyze AquaMaps"
+toc: true
+number-sections: true
+format: 
+  html:
+    code-fold: true
+    embed-resources: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = T,
+  warning = F,
+  message = F)
+```
+
+```{r}
+librarian::shelf(
+  # ecoquants/offhabr,
+  r-spatial/mapview, # dev mapview works with terra, per https://github.com/r-spatial/mapview/pull/435
+  DBI, dplyr, DT, exactextractr, leaflet, mapview, 
+  scales, sf, tibble, terra, zeallot,
+  quiet = T)
+devtools::load_all("~/Github/ecoquants/offhabr")
+select = dplyr::select
+```
+
+## Map Zones, Blocks and Cells
+
+Using a customized [offhabr](http://ecoquants.com/offhabr/index.html) R package.
+
+```{r}
+oh_zones_s1k %>% 
+  mapview(zcol = "zone_name")
+
+boem_blocks %>% 
+  mapview(zcol = "zone_key")
+
+am_cell_zones %>% 
+  st_simplify(T, 1000) %>% 
+  mapview(zcol = "zone_key")
+```
+
+
+## Species Richness per Zone
+
+```{r}
+con <- oh_pg_con()
+
+# aggregate to cells
+c_nspp <- tbl(con, "am_spp_cells") %>% 
+  group_by(hcaf_id) %>% 
+  summarize(
+    nspp = n()) %>% 
+  collect() %>% 
+  mutate(
+    nspp = as.integer(nspp))
+
+# aggregate to zones
+z_nspp <- am_cell_zones %>% 
+  left_join(
+    c_nspp,
+    by = "hcaf_id") %>% 
+  group_by(
+    zone_key) %>% 
+  summarize(
+    nspp = weighted.mean(nspp, area_km2)) %>% 
+  left_join(
+    oh_zones %>% 
+      st_drop_geometry() %>% 
+      select(zone_key, zone_name),
+    by = "zone_key") %>% 
+  mutate(
+    nspp_zscore = scale(nspp)[,1]) %>% 
+  relocate(zone_name, .after = zone_key)
+
+oh_map() %>% 
+  oh_add_ply(
+    ply     = z_nspp, 
+    fld_val = nspp,
+    fld_id  = zone_name, 
+    str_val = "# species", 
+    str_id  = "Zone",
+    div_mid = mean(z_nspp$nspp))
+
+z_nspp %>% 
+  st_drop_geometry() %>% 
+  datatable()
+```
+
+## Species Richness per Block, all Zones
+
+```{r}
+# aggregate to blocks
+b_nspp <- am_cell_blocks %>% 
+  left_join(
+    c_nspp,
+    by = "hcaf_id") %>% 
+  group_by(
+    zone_key, block_key) %>% 
+  summarize(
+    nspp = weighted.mean(nspp, area_km2),
+    .groups = "drop") %>% 
+  left_join(
+    oh_zones %>% 
+      st_drop_geometry() %>% 
+      select(zone_key, zone_name),
+    by = "zone_key") %>% 
+  relocate(zone_name, .after = zone_key)
+
+oh_map() %>% 
+  oh_add_ply(
+    ply     = b_nspp, 
+    fld_val = nspp,
+    fld_id  = block_key, 
+    str_val = "# species", 
+    str_id  = "Block",
+    div_mid = mean(b_nspp$nspp))
+
+b_nspp %>% 
+  st_drop_geometry() %>% 
+  datatable()
+```
+
+## Species Richness per Block, one Zone
+
+```{r}
+zkeys <- oh_zones %>% 
+  filter(
+    zone_key %in% unique(b_nspp$zone_key)) %>% 
+  arrange(zone_name) %>% 
+  pull(zone_key)
+
+get_zb1 <- function(zone_key){
+  z1_nspp <- z_nspp %>% 
+    filter(zone_key == !!zone_key)
+  b1_nspp <- b_nspp %>% 
+    filter(zone_key == !!zone_key)
+  zone_name <- z1_nspp$zone_name
+  map_caption <- glue("Species richness for {zone_name} zone (avg: {round(z1_nspp$nspp, 1)}) and blocks.")
+  list(zone_key, zone_name, z1_nspp, b1_nspp, map_caption)
+}
+
+map_zb1 <- function(z1_nspp, b1_nspp){
+  oh_map() %>% 
+    oh_add_ply(
+      ply     = z1_nspp, 
+      fld_val = nspp,
+      fld_id  = zone_name, 
+      str_val = "# species", 
+      str_id  = "Zone",
+      div_mid = z1_nspp$nspp,
+      add_legend = F) %>% 
+    oh_add_ply(
+      ply     = b1_nspp, 
+      fld_val = nspp,
+      fld_id  = block_key, 
+      str_val = "# species", 
+      str_id  = "Block",
+      div_mid = z1_nspp$nspp)
+}
+
+get_zb1(zkeys[1]) %->% 
+  c(zone_key, zone_name, z1_nspp, b1_nspp, map_caption)
+```
+
+### `r zone_key`
+
+```{r, fig.cap = map_caption}
+map_zb1(z1_nspp, b1_nspp)
+```
+
+```{r}
+b1_nspp %>% 
+  st_drop_geometry() %>% 
+  datatable()
+```
+
+```{r}
+get_zb1(zkeys[2]) %->% 
+  c(zone_key, zone_name, z1_nspp, b1_nspp, map_caption)
+```
+
+### `r zone_key`
+
+```{r, fig.cap = map_caption}
+map_zb1(z1_nspp, b1_nspp)
+```
+
+```{r}
+b1_nspp %>% 
+  st_drop_geometry() %>% 
+  datatable()
+```
+
+```{r}
+get_zb1(zkeys[3]) %->% 
+  c(zone_key, zone_name, z1_nspp, b1_nspp, map_caption)
+```
+
+### `r zone_key`
+
+```{r, fig.cap = map_caption}
+map_zb1(z1_nspp, b1_nspp)
+```
+
+```{r}
+b1_nspp %>% 
+  st_drop_geometry() %>% 
+  datatable()
+```
+
+```{r}
+get_zb1(zkeys[4]) %->% 
+  c(zone_key, zone_name, z1_nspp, b1_nspp, map_caption)
+```
+
+### `r zone_key`
+
+```{r, fig.cap = map_caption}
+map_zb1(z1_nspp, b1_nspp)
+```
+
+```{r}
+b1_nspp %>% 
+  st_drop_geometry() %>% 
+  datatable()
+```
+
+```{r}
+get_zb1(zkeys[5]) %->% 
+  c(zone_key, zone_name, z1_nspp, b1_nspp, map_caption)
+```
+
+### `r zone_key`
+
+```{r, fig.cap = map_caption}
+map_zb1(z1_nspp, b1_nspp)
+```
+
+```{r}
+b1_nspp %>% 
+  st_drop_geometry() %>% 
+  datatable()
+```
+
+```{r}
+get_zb1(zkeys[6]) %->% 
+  c(zone_key, zone_name, z1_nspp, b1_nspp, map_caption)
+```
+
+### `r zone_key`
+
+```{r, fig.cap = map_caption}
+map_zb1(z1_nspp, b1_nspp)
+```
+
+```{r}
+b1_nspp %>% 
+  st_drop_geometry() %>% 
+  datatable()
+```
+
+```{r}
+get_zb1(zkeys[7]) %->% 
+  c(zone_key, zone_name, z1_nspp, b1_nspp, map_caption)
+```
+
+### `r zone_key`
+
+```{r, fig.cap = map_caption}
+map_zb1(z1_nspp, b1_nspp)
+```
+
+```{r}
+b1_nspp %>% 
+  st_drop_geometry() %>% 
+  datatable()
+```
+
+```{r}
+get_zb1(zkeys[8]) %->% 
+  c(zone_key, zone_name, z1_nspp, b1_nspp, map_caption)
+```
+
+### `r zone_key`
+
+```{r, fig.cap = map_caption}
+map_zb1(z1_nspp, b1_nspp)
+```
+
+```{r}
+b1_nspp %>% 
+  st_drop_geometry() %>% 
+  datatable()
+```
+
+```{r}
+get_zb1(zkeys[9]) %->% 
+  c(zone_key, zone_name, z1_nspp, b1_nspp, map_caption)
+```
+
+### `r zone_key`
+
+```{r, fig.cap = map_caption}
+map_zb1(z1_nspp, b1_nspp)
+```
+
+```{r}
+b1_nspp %>% 
+  st_drop_geometry() %>% 
+  datatable()
+```

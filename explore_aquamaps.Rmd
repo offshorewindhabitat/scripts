@@ -122,6 +122,7 @@ dbSendQuery(
   'CREATE INDEX IF NOT EXISTS hcaf_species_native_CsquareCode_idx ON hcaf_species_native("CsquareCode")')
 
 # summarize in postgres (1.7 sec vs 4.1 min in sqlite)
+
 c_spp <- tbl(con_pg, "hcaf_species_native") %>% 
   filter(
     CenterLong  >= x1,

@@ -1,0 +1,57 @@
+---
+title: "geemap"
+format: html
+---
+
+## Quarto
+
+- [geemap docker](https://hub.docker.com/r/bkavlak/geemap)
+
+
+
+```bash
+# pull
+docker pull bkavlak/geemap:latest
+
+# check
+docker image ls
+
+# run
+docker run -it --name geemap -p 8888:8888 -p 6006:6006 -v '/Users/bbest/My Drive/projects/offhab/data/_geemap':/geemap/data bkavlak/geemap:latest bash
+# WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+```
+
+Now inside VM prompt like `root@71129cbd804f:/geemap`:
+
+```bash
+jupyter notebook --ip=0.0.0.0 --port=8888 --allow-root
+```
+
+To access the notebook, open this file in a browser:
+    file:///root/.local/share/jupyter/runtime/nbserver-14-open.html
+Or copy and paste one of these URLs:
+    http://71129cbd804f:8888/?token=695b7087b9f5be8d5c94d4e78defcdd507a8905e16946f8d
+ or http://127.0.0.1:8888/?token=695b7087b9f5be8d5c94d4e78defcdd507a8905e16946f8d
+
+
+Process
+Run the container by typing on bash or PowerShell:
+
+docker run -it --name 'CONTAINER NAME' -p 8888:8888 -p 6006:6006 -v 'VOLUME DIRECTORY':/geemap/data bkavlak/geemap:latest bash
+You should change text inside '___' as your preference (Don't include apostrophes ' ')
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this 
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

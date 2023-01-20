@@ -1,0 +1,236 @@
+---
+title: "gee_upload"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+## Quarto
+
+* [Python Installation | Google Earth Engine | Google Developers](https://developers.google.com/earth-engine/guides/python_install)
+  * [Install the gcloud CLI | Google Cloud](https://cloud.google.com/sdk/docs/install)
+  * [Python Installation | Google Earth Engine | Google Developers](https://developers.google.com/earth-engine/guides/python_install)
+* [Importing Raster Data | Google Earth Engine | Google Developers](https://developers.google.com/earth-engine/guides/image_upload)
+```bash
+cd /Users/bbest/Library/r-miniconda-arm64/envs/r-reticulate/bin
+pip install earthengine-api --upgrade
+# in dedicated Terminal
+/Users/bbest/Library/r-miniconda-arm64/envs/r-reticulate/bin/earthengine/earthengine authenticate
+```
+
+```{python}
+import ee
+ee.Authenticate()
+ee.Initialize()
+print(ee.Image("NASA/NASADEM_HGT/001").get("title").getInfo())
+```
+
+## Single upload
+
+```{r}
+librarian::shelf(
+  terra)
+  
+in_tif  <- "/Users/bbest/My Drive/projects/offhab/data/_oh_rast0to100/am/am_137098.tif"
+out_tif <- "/Users/bbest/My Drive/projects/offhab/data/_oh_rast0to100/am_137098_a.tif"
+tmp_tif <- in_tif
+tif     <- "/Users/bbest/My Drive/projects/offhab/data/_oh_rast0to100/am_137098_b.tif"
+
+datatype = "INT1U"
+gdal_datatype <- "Byte"
+opt_byte     <- ifelse(datatype == "INT1U", "-a_nodata 255", "")
+# OLD pre-COG ----
+# opt_compress <- "-co COMPRESS=DEFLATE -co ZLEVEL=9 -co PREDICTOR=2"
+# opt_tile     <- "-co TILED=YES" # for COG
+# NEW COG ----
+# Given an input dataset in.tif with already generated internal or external overviews, a cloud optimized GeoTIFF (COG) can be generated with:
+# 
+# gdal_translate in.tif out.tif -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=LZW
+# 
+# This will result in a images with tiles of dimension 256x256 pixel for main resolution, and 128x128 tiles for overviews.
+opt_compress <- "-co COMPRESS=LZW"
+opt_tile     <- "-co TILED=YES -co COPY_SRC_OVERVIEWS=YES" # for COG
+opt_sparse   <- "-co SPARSE_OK=TRUE"
+opts <- glue::glue("{opt_byte} -ot {gdal_datatype} {opt_compress} {opt_tile} {opt_sparse}")
+system(glue::glue("gdal_translate -a_srs EPSG:3857 {opts} '{tmp_tif}' '{tif}'"))
+
+# gdalwarp -t_srs EPSG:3857 -of GTiff -co "COMPRESS=DEFLATE" -co "PREDICTOR=2" $in_tif $out_tif
+```
+
+## Upload TIF to GEE Collection
+
+* [Cloud GeoTiff Backed Earth Engine Assets | Google Earth Engine | Google Developers](https://developers.google.com/earth-engine/Earth_Engine_asset_from_cloud_geotiff)
+  * [Method: projects.assets.create | Google Earth Engine | Google Developers](https://developers.google.com/earth-engine/reference/rest/v1alpha/projects.assets/create)
+
+## Transfer rasters for GEE upload
+
+Need to explicitly set `EPSG:3857` with updated `write_rast()`.
+
+```{r}
+librarian::shelf(
+  dplyr, fs, purrr, stringr, terra)
+devtools::load_all("~/Github/ecoquants/offhabr")
+
+dir_tif  <- "/Users/bbest/My Drive/projects/offhab/data/_oh_rast0to100"
+dir_lyrs <- "/Users/bbest/My Drive/projects/offhab/data/_lyrs"
+dir_create(dir_lyrs)
+
+rx_tif <- "([a-z]{2})_([0-9]+)\\.tif$"
+d <- tibble(
+  path_tif =  dir_ls(dir_tif, regexp=rx_tif, recurse = T)) %>%
+  mutate(
+    tif       = basename(path_tif),
+    ds_key    = str_replace(tif, rx_tif, "\\1"),
+    aphia_id  = str_replace(tif, rx_tif, "\\2"),
+    lyr_tif   = glue("{dir_lyrs}/{tif}"))
+sum(duplicated(basename(d$lyr_tif)))
+d$path_tif[1]
+
+d %>% 
+  pwalk(
+    function(path_tif, lyr_tif, ...){
+      write_rast(path_tif, lyr_tif) } )
+```
+
+* [TensorFlow for R – gcloud\_install](https://tensorflow.rstudio.com/reference/cloudml/gcloud_install) (source: [gcloud-install.R](https://github.com/rstudio/cloudml/blob/main/R/gcloud-install.R))
+
+```{r}
+librarian::shelf(
+  cloudml)
+ gcloud_install(update = T) 
+```
+
+
+```{python}
+import ee
+from google.auth.transport.requests import AuthorizedSession
+
+ee.Authenticate()  #  or !earthengine authenticate --auth_mode=gcloud
+session = AuthorizedSession(ee.data.get_persistent_credentials())
+```
+
+CLOUDSDK_PYTHON=/Users/bbest/Library/r-miniconda-arm64/envs/r-reticulate/bin/python
+
+/Users/bbest/Library/r-miniconda-arm64/envs/r-reticulate/bin:/Users/bbest/google-cloud-sdk/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin:/Users/bbest/Library/r-miniconda-arm64/envs/r-reticulate/bin:/Users/bbest/google-cloud-sdk/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/bbest/Library/r-miniconda-arm64/condabin:/Users/bbest/Applications/quarto/bin:/Library/TeX/texbin:/usr/texbin:/Applications/RStudio.app/Contents/MacOS:/Users/bbest/Library/TinyTeX/bin/universal-darwin
+
+
+https://samapriya.github.io/geeup/installation/
+```bash
+pip install geeup
+```
+
+https://samapriya.github.io/geeup/projects/image_upload/
+
+https://samapriya.github.io/geeup/projects/cookies_setup/
+
+```bash
+geeup cookie_setup
+```
+
+```bash
+SRC='/Users/bbest/My Drive/projects/offhab/data/_oh_rast0to100/gee'
+MET="$SRC/_metadata.csv"
+#DST='ee-offhab/lyrs_ds_aphia'
+DST='projects/ee-offhab/assets/lyrs_ds_aphia'
+DST='projects/ee-offhab/assets/fldr_ds_aphia'
+#geeup getmeta --input $SRC --metadata $MET
+geeup upload --source $SRC --dest $DST -m $MET --nodata 255 --pyramids MEAN
+
+
+# https://developers.google.com/earth-engine/guides/image_manifest
+earthengine upload image --manifest ~/gee-test.json "/opt/homebrew/lib/python3.10/site-packages/geeup/data.json"
+
+{"name": "projects/ee-offhab/assets/fldr_ds_aphia/am_341818", "pyramidingPolicy": "MEAN", "properties": {"xsize": 14678, "ysize": 7183, "num_bands": 1, "id_no": "am_341818"}, "missing_data": {"values": [255]}}%      
+
+earthengine rm 'projects/ee-offhab/assets/lyrs_ds_aphia/am_126950'
+earthengine upload image --manifest '/Users/bbest/My Drive/projects/offhab/data/_oh_rast0to100/gee-manifest_am_126950.json'
+
+earthengine rm 'projects/ee-offhab/assets/lyrs_ds_aphia/am_129898'
+earthengine upload image --manifest '/Users/bbest/My Drive/projects/offhab/data/_oh_rast0to100/gee-manifest_am_129898.json'
+
+earthengine rm 'projects/ee-offhab/assets/lyrs_ds_aphia/am_129784'
+earthengine upload image --manifest '/Users/bbest/My Drive/projects/offhab/data/_oh_rast0to100/gee-manifest_am_129784.json'
+```
+
+## mass upload to gcloud
+
+https://www.tucson.ars.ag.gov/notebooks/uploading_data_2_gee.html
+
+5. Uploading files from local disk into Google Cloud
+A single copy can be made from the command line once you are authenticated into Google Cloud.
+
+```bash
+sa_json='/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json'
+gcloud auth activate-service-account --key-file $sa_json
+
+cd ~/My\ Drive/projects/offhab/data/_lyrs
+# -[m]ultiprocess -[n]ew only
+gsutil -m cp -n *.tif gs://offhab_lyrs
+```
+
+```{r}
+librarian::shelf(
+  dplyr, fs, glue, multidplyr, parallel, purrr, stringr)
+
+dir_lyrs <- "/Users/bbest/My Drive/projects/offhab/data/_lyrs"
+dir_json <- "/Users/bbest/My Drive/projects/offhab/data/_lyrs_json"
+dir_create(dir_json)
+
+rx_tif <- "([a-z]{2})_([0-9]+)\\.tif$"
+d <- tibble(
+  path_tif =  dir_ls(dir_lyrs, regexp=rx_tif, recurse = T)) %>%
+  mutate(
+    tif       = basename(path_tif),
+    lyr_key   = path_ext_remove(tif),
+    ds_key    = str_replace(tif, rx_tif, "\\1"),
+    aphia_id  = str_replace(tif, rx_tif, "\\2"),
+    path_json   = glue("{dir_json}/{lyr_key}.json")) %>% 
+  arrange(lyr_key)
+
+gs2ee <- function(tif, lyr_key, ds_key, aphia_id, path_json, ...){
+  # Google Storage (gs) to Earth Engine (ee)
+  json <- glue::glue(
+    '{{
+       "name":"projects/ee-offhab/assets/lyrs_ds_aphia/{lyr_key}",
+       "tilesets":[{{"sources":[{{"uris":["gs://offhab_lyrs/{lyr_key}.tif"]}}]}}],
+       "pyramidingPolicy":"MEAN",
+       "properties":{{
+          "lyr_key":"{lyr_key}",
+          "ds_key":"{ds_key}",
+          "aphia_id":{aphia_id}
+       }},
+       "missing_data":{{"values":[255]}}
+    }}')
+  writeLines(json, path_json)
+  # earthengine rm 'projects/ee-offhab/assets/lyrs_ds_aphia/am_129898'
+  cmd <- glue::glue("earthengine upload image --manifest '{path_json}'")
+  r <- try(system(cmd))
+  if (inherits(r, "try-error"))
+    return(F)
+  return(T)
+}
+
+# setup cluster to parallelize ----
+cl <- new_cluster(detectCores() - 1) # eg my MacBook Air has 8 CPUs, so 7 cores used
+cluster_library(
+  cl, c(
+    "dplyr", "glue", "purrr"))
+cluster_assign(
+  cl,
+  gs2ee  = gs2ee)
+
+d <- d %>%
+  partition(cl) %>%
+  mutate(
+    is_on_ee = pmap_lgl(
+      list(tif, lyr_key, ds_key, aphia_id, path_json),
+      gs2ee)) %>% 
+  collect()
+
+# TODO: check
+table(d3$is_on_ee)
+table(d3$ds_key)
+#   am   oa   rl 
+# 9645  641  959
+```
+

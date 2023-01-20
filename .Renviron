@@ -1,0 +1,15 @@
+# library(rgee)
+#
+# # Set your Python ENV
+# Sys.setenv("RETICULATE_PYTHON" = "/opt/homebrew/bin/python3")
+#
+# # Set Google Cloud SDK. Only need it the first time you log in.
+# Sys.setenv("EARTHENGINE_GCLOUD" = "/Users/bbest/google-cloud-sdk/")
+#
+# # update path to find gcloud
+# old_path <- Sys.getenv("PATH")
+# Sys.setenv(PATH = paste(old_path, "/Users/bbest/google-cloud-sdk/bin", sep = ":"))
+# ee_Authenticate()
+#
+# # Init your Earth Session
+# ee_Initialize()

@@ -1,0 +1,877 @@
+---
+title: "Raster Synthesis"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+## Setup
+
+```{r setup}
+librarian::shelf(
+  devtools, dplyr, DT, fs, glue, googleCloudStorageR, leaflet, multidplyr, 
+  progress, purrr, readr, sf, stringr, terra, tibble, tidyr, units)
+load_all("~/Github/ecoquants/offhabr")
+# devtools::install_local("~/Github/ecoquants/offhabr", force=T)
+if (packageVersion("leaflet") <= "2.1.1")
+  warning("terra::plet() requires leaflet > 2.1.1")
+
+dir_tif <- "/Users/bbest/My Drive/projects/offhab/data/archive/_lyrs"
+dir_zs  <- "/Users/bbest/My Drive/projects/offhab/data/derived/zonal_stats"
+
+rx_lyr <- "([a-z]{2})_([0-9]+)"
+d_lyrs <- tibble(
+  path_tif    = dir_ls(dir_tif, glob="*.tif")) %>%
+  mutate(
+    tif       = path_file(path_tif),
+    lyr_key   = path_ext_remove(tif),
+    ds_key    = str_replace(tif, rx_lyr, "\\1"),
+    aphia_id  = str_replace(tif, rx_lyr, "\\2"))
+nrow(d_lyrs) # 11,245
+table(d_lyrs$ds_key)
+#   am   oa   rl 
+# 9645  641  959
+```
+
+## Create Cloud Optimized GeoTIFFs (COGs) for relative env suitability (`res`) and presence (`prs`)
+
+```{r}
+tif_to_cogs <- function(in_tif, redo=F, upload_to_gcs=F){
+  # in_tif <- d_lyrs$path_tif[1]
+  message(glue("Processing {basename(in_tif)}"))
+
+  dir_out_cog <- "/Users/bbest/My Drive/projects/offhab/data/derived/lyrs_ds_sp_cog"
+  
+  lyr_key <- basename(in_tif) |> fs::path_ext_remove()
+  rel_tif <- glue::glue("{dir_out_cog}/{lyr_key}_rel.tif")
+  prs_tif <- glue::glue("{dir_out_cog}/{lyr_key}_prs.tif")
+  
+  if (all(fs::file_exists(c(rel_tif, prs_tif)) & !redo)){
+    message("  SKIPPING; both rel_tif & prs_tif exist")
+    return(TRUE)
+  }
+  
+  # r_rel: relative env suitability
+  r_rel <- terra::rast(in_tif)
+  if (global(r_rel, "min", na.rm=T) == 0)
+    r_rel[r_rel == 0] <- NA
+  # plet(r_rel, tiles="Esri.NatGeoWorldMap")
+  
+  # r_prs: presence
+  system.time({
+    r_prs = not.na(r_rel) |> mask(r_rel) })
+  # plet(r_prs, tiles="Esri.NatGeoWorldMap")
+  
+  # write COG raster
+  offhabr::write_rast(r_rel, rel_tif, threads=1)
+  offhabr::write_rast(r_prs, prs_tif, threads=1)
+  
+  if (upload_to_gcs){
+    # setup
+    Sys.setenv(
+      "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
+      "GCS_AUTH_FILE"      = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+    gcs_global_bucket("offhab_lyrs")
+    
+    # upload
+    m <- googleCloudStorageR::gcs_upload(
+      file = rel_tif,
+      name = basename(rel_tif))
+    m <- googleCloudStorageR::gcs_upload(
+      file = prs_tif,
+      name = basename(prs_tif))
+    
+    # make publicly available
+    googleCloudStorageR::gcs_update_object_acl(
+      basename(rel_tif), entity_type = "allUsers")
+    googleCloudStorageR::gcs_update_object_acl(
+      basename(prs_tif), entity_type = "allUsers")
+  }
+  
+  TRUE
+}
+
+# load_all("~/Github/ecoquants/offhabr")
+# devtools::install_local("~/Github/ecoquants/offhabr", force=T)
+
+# Sys.setenv(
+#   "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
+#   "GCS_AUTH_FILE"      = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+# gcs_auth(Sys.getenv("GCS_AUTH_FILE"))
+# gcs_global_bucket("offhab_lyrs")
+# gcs_objects <- gcs_list_objects()
+ 
+cl <- new_cluster(parallel::detectCores() - 1)
+cluster_library(
+  cl, c(
+    # "googleCloudStorageR", "stringr",
+    "dplyr", "fs", "glue", "purrr", "terra", "offhabr"))
+cluster_assign(
+  cl,
+  tif_to_cogs = tif_to_cogs)
+
+dir_out_cog <- "/Users/bbest/My Drive/projects/offhab/data/derived/lyrs_ds_sp_cog"
+
+d_cl <- d_lyrs |> 
+  arrange(lyr_key) |> 
+  mutate(
+    # rel_obj = glue("{lyr_key}_rel.tif"),
+    # prs_obj = glue("{lyr_key}_prs.tif"),
+    rel_tif = glue("{dir_out_cog}/{lyr_key}_rel.tif"),
+    prs_tif = glue("{dir_out_cog}/{lyr_key}_prs.tif") ) |> 
+  filter(
+    # !(prs_obj %in% gcs_objects$name & rel_obj %in% gcs_objects$name)) |> 
+    !(file_exists(rel_tif) & file_exists(prs_tif))) |> 
+  select(path_tif) |> 
+  partition(cl) |> 
+  mutate(
+    do_cog = map_lgl(path_tif, tif_to_cogs)) |> 
+  collect()
+```
+
+## COG Leaflet Map
+```{r}
+librarian::shelf(
+  glue, leaflet)
+# , reticulate, r-spatial/rgee)
+
+  rel_url <- glue(
+    "https://storage.googleapis.com/offhab_lyrs/{path_file(rel_tif)}")
+  prs_url <- glue(
+    "https://storage.googleapis.com/offhab_lyrs/{path_file(prs_tif)}")
+
+
+# set gcloud path
+# Sys.setenv(PATH=glue("{Sys.getenv('PATH')}:/Users/bbest/google-cloud-sdk/bin"))
+# ee_Authenticate()
+# Credentials saved to file: [/Users/bbest/.config/gcloud/application_default_credentials.json]
+# ee_check_gcloud()
+# ee_Initialize()
+
+# img_id <- "https://storage.googleapis.com/offhab_lyrs/oa_100691_rel_e.tif"
+# img_id <- gcs_url
+
+# rast(rel_tif)
+# system(glue("gdalinfo '{rel_tif}'"))
+# 
+# visParams <- list(
+#   bands=c("oa_100691"), 
+#   min = 1, max = 100, nodata = 255)
+# Map$centerObject(img_id)
+# m <- Map$addLayer(
+#   eeObject = img_id, 
+#   visParams = visParams,
+#   name = "My_first_COG",
+#   titiler_server = "https://api.cogeo.xyz/") |> 
+# names(m)
+# class(m)
+
+rel_cog <- glue("/vsicurl/{rel_url}")
+r_rel <- rast(rel_cog)
+r_rel
+plet(r_rel, tiles="Esri.NatGeoWorldMap")
+
+prs_cog <- glue("/vsicurl/{prs_url}")
+r_prs <- rast(prs_cog)
+r_prs
+plet(r_prs, tiles="Esri.NatGeoWorldMap")
+
+
+rel_tiles <- glue("https://api.cogeo.xyz/cog/tiles/WebMercatorQuad/{{z}}/{{x}}/{{y}}@2x?url={rel_url}&resampling_method=average&rescale=1,100&return_mask=true&colormap_name=viridis")
+prs_tiles <- glue("https://api.cogeo.xyz/cog/tiles/WebMercatorQuad/{{z}}/{{x}}/{{y}}@2x?url={prs_url}&resampling_method=average&rescale=1,100&return_mask=true&colormap_name=viridis")
+
+leaflet() |> 
+  addProviderTiles(providers$Esri.NatGeoWorldMap) |> 
+  addTiles(
+    urlTemplate=img_tile_url)
+
+leaflet() |> 
+  addProviderTiles(providers$Esri.NatGeoWorldMap) |> 
+  addTiles(
+    urlTemplate=prs_tiles)
+```
+
+
+## Zone stats, run individually
+
+```{r stack eval~F}
+#| eval: false
+
+oh_zonal_stats <- function(tif, stat="mean", dir_csv, redo=F){
+  # stat is one of fun in terra::zonal() or "area_km2"
+  
+  # TODO: oh_block_stats
+  
+  # librarian::shelf(fs, glue, readr, terra, tidyr, offhabr)
+    
+  # tif = d_lyrs$path_tif[1]
+  # stat = "mean"
+  # stat = "area_km2"
+  # dir_csv = "/Users/bbest/My Drive/projects/offhab/data/_zonal_stats"
+    
+  csv <- glue::glue("{dir_csv}/{tif |> fs::path_file() |> fs::path_ext_remove()}_{stat}.csv")
+  
+  if (file.exists(csv) & !redo)
+    return(T)
+  
+  r   <- terra::rast(tif) # plot(r)
+  r_z <- offhabr::oh_rast("zone_id")
+  
+  if (stat == "area_km2"){
+    r_a <- oh_rast("area_m2")    # plot(r)
+    x <- mask(noNA(r) * r_a, r)  # plot(r)
+    fxn <- "sum"
+  } else {
+    x <- r
+    fxn <- stat
+  }
+  
+  d <- terra::zonal(x, r_z, fxn, na.rm=T) %>% 
+    tidyr::pivot_longer(
+      !zone_id,
+      names_to       = "lyr_key",
+      values_to      = stat,
+      values_drop_na = T)
+  if (stat == "area_km2"){
+    d <- d %>% 
+      dplyr::mutate(
+        area_km2 = area_km2 / (1000*1000))
+  }
+  if (stat == "notNA"){
+    d <- d %>% 
+      filter(notNA > 0)
+  }
+  
+  write_csv(d, csv)
+  return(T)
+}
+  
+# run oh_zonal_stats() per lyr on oh_rast("zone_id") ----
+cl <- new_cluster(parallel::detectCores() - 1)
+cluster_library(
+  cl, c(
+    "dplyr", "fs", "glue", "purrr", "readr", "terra", "tidyr", "offhabr"))
+cluster_assign(
+  cl, 
+  oh_zonal_stats = oh_zonal_stats,
+  dir_zs         = dir_zs)
+
+d_cl <- d_lyrs %>% 
+  select(path_tif) %>% 
+  partition(cl) %>% 
+  mutate(
+    do_mean     = map_lgl(path_tif, oh_zonal_stats, stat="mean"    , dir_csv=dir_zs),
+    do_notNA    = map_lgl(path_tif, oh_zonal_stats, stat="notNA"   , dir_csv=dir_zs),
+    do_area_km2 = map_lgl(path_tif, oh_zonal_stats, stat="area_km2", dir_csv=dir_zs)) %>% 
+  collect()
+
+# collapse zonal stats (zs) CSVs into tibble ----
+options(readr.show_col_types = FALSE)
+rx_zs <- "([a-z]{2})_([0-9]+)_(mean|notNA|area_km2)"
+d_zs <- dir_info(dir_zs, glob = "*.csv") %>%
+  mutate(
+    lyr_key   = path_file(path) |> path_ext_remove(),
+    ds_key    = str_replace(lyr_key, rx_zs, "\\1"),
+    aphia_id  = str_replace(lyr_key, rx_zs, "\\2") %>%
+      as.integer(),
+    stat      = str_replace(lyr_key, rx_zs, "\\3"))
+d_zs <- d_zs %>% 
+  mutate(
+    data = map(path, read_csv))
+
+d_zs_d <- d_zs %>% 
+  select(data) %>% 
+  mutate(
+    nrow = map_int(data, nrow)) %>% 
+  filter(nrow > 0) %>% 
+  select(-nrow) %>% 
+  unnest(data) %>% 
+  pivot_longer(
+    !any_of(c("zone_id", "lyr_key")),
+    names_to  = "stat",
+    values_to = "val") %>% 
+  filter(!is.na(val)) %>% 
+  pivot_wider(
+    names_from = stat,
+    values_from = val) %>%
+  mutate(
+    ds_key    = str_replace(lyr_key, "([a-z]{2})_([0-9]+)", "\\1"),
+    aphia_id  = str_replace(lyr_key, "([a-z]{2})_([0-9]+)", "\\2") |>
+      as.integer()) %>% 
+  relocate(lyr_key, ds_key, aphia_id, zone_id) # unique by lyr_key, zone_id
+nrow(d_zs_d) # 55,891
+length(unique(d_zs_d$aphia_id)) # 9,953
+
+# sum(duplicated(d_zs_d$aphia_id)) # 45,938
+# lyr_zonestats  [reduce to single]-> spp_zonestats
+# lyr_blockstats [reduce to single]-> spp_blockstats
+
+d_zs_dupes <- d_zs_d %>% 
+  semi_join(
+    d_zs_d %>% 
+  select(aphia_id, zone_id) %>% 
+  filter(duplicated(.)),
+  by = c("aphia_id", "zone_id")) %>% 
+  arrange(aphia_id, zone_id, ds_key) %>% 
+  select(aphia_id, zone_id, ds_key, notNA) %>% 
+  pivot_wider(
+    names_from = ds_key,
+    values_from = notNA)
+# 3,608 × 5
+# length(unique(d_zs_dupes$aphia_id)) # 957
+# View(d_zs_dupes)
+
+# * write to duckdb table lyr_zone_stats ----
+
+con <- oh_con(read_only = F)
+# con <- oh_con()
+# dbListTables(con)
+# dbRemoveTable(con, "lyr_zonestats")
+
+dbWriteTable(con, "lyr_zone_stats", d_zs_d)
+dbSendStatement(
+  con,
+  "CREATE UNIQUE INDEX lyr_zone_stats_idx ON lyr_zone_stats (lyr_key, zone_id)")
+dbDisconnect(con, shutdown=T)
+```
+
+## Summarize Zones: map, table, taxa sunburst
+
+```{r}
+# * read from duckdb ----
+con <- oh_con()
+d_lyr_zone_stats <- tbl(con, "lyr_zone_stats") |> 
+  collect()
+
+offhabr::oh_zones_s1k |> 
+  filter(zone_version == 1)
+
+
+```
+
+
+## Block stats, run in batches of 100
+
+```{r}
+# load_all("~/Github/ecoquants/offhabr")
+# devtools::install_local("~/Github/ecoquants/offhabr", force=T)
+r_b_v1 <- oh_rast("block_id", zone_version = 1)
+
+oh_block_stats <- function(tifs, stat="mean", csv, redo=F){
+  # tifs    = d_lyrs %>% slice(1:5) %>% pull(path_tif)
+  # stat    = "mean"
+  # dir_csv = dir_zs
+  # redo    = F
+  
+  if (file.exists(csv) & !redo)
+    return(T)
+
+  # get raster stack
+  stk <- rast(tifs)
+  
+  r_b <- offhabr::oh_rast("block_id")
+  # TODO: zone_version = 2
+  
+  if (stat == "area_km2"){
+    r_a <- oh_rast("area_m2")    # plot(r_a)
+    x <- terra::sapp(
+      stk, 
+      \(i) noNA(i) * r_a |> terra::mask(i))
+    fxn <- "sum"
+  } else {
+    x <- stk
+    fxn <- stat
+  }
+  
+  d <- terra::zonal(x, r_b, fxn, na.rm=T)
+  # d_0 <- d
+  d <- d |> 
+    tidyr::pivot_longer(
+      !block_id_v1,
+      names_to       = "lyr_key",
+      values_to      = stat,
+      values_drop_na = T)
+  if (stat == "area_km2"){
+    d <- d %>% 
+      dplyr::mutate(
+        area_km2 = area_km2 / (1000*1000))
+  }
+  if (stat == "notNA"){
+    d <- d %>% 
+      filter(notNA > 0)
+  }
+  
+  write_csv(d, csv)
+  return(T)
+}
+
+cl <- new_cluster(parallel::detectCores() - 1)
+cluster_library(
+  cl, c(
+    "dplyr", "fs", "glue", "purrr", "readr", "terra", "tidyr", "offhabr"))
+cluster_assign(
+  cl, 
+  oh_block_stats = oh_block_stats,
+  dir_zs         = dir_zs)
+
+n_batch <- 100
+d_cl <- d_lyrs |> 
+  arrange(aphia_id) |> 
+  # select(-rowid) %>% 
+  rowid_to_column("rowid") |> 
+  mutate(
+    batchid = rowid %/% n_batch + 1) |> 
+  filter(batchid > 9) |> 
+  select(batchid, rowid, path_tif) |> 
+  group_by(batchid) |> 
+  nest() |> 
+  mutate(
+    mean_batch_csv = map_chr(
+      data,
+      \(x){
+        glue::glue(
+        "{dir_zs}/block_batch{paste(range(x$rowid), collapse='-')}_mean.csv")
+        })) |> 
+  partition(cl) |> 
+  mutate(
+    do_mean     = map2_lgl(
+      data, mean_batch_csv, 
+      \(d, csv) oh_block_stats(d$path_tif, stat="mean", csv=csv))) %>% 
+  collect()
+
+
+d_lyrs <- d_lyrs %>% 
+  arrange(aphia_id) %>% 
+  select(-rowid) %>% 
+  rowid_to_column("rowid") %>% 
+  mutate(
+    batchid = rowid %/% n_batch + 1)
+i_beg <- min(d_lyrs$batchid) 
+i_end <- max(d_lyrs$batchid)
+pb <- progress_bar$new(
+  format = "  zone stats [:bar] :current/:total (:percent) in :elapsed; eta: :eta",
+  total = i_end - i_beg + 1, clear = FALSE, width=60)
+for (b in unique(d_lyrs$batchid)){  # b = 1
+  pb$tick()
+  
+  for (stat in c("mean")){
+    d_lyrs_b <- d_lyrs |> 
+      filter(batchid == b)
+
+    csv <- glue::glue(
+      "{dir_zs}/block_batch{paste(range(d_lyrs_b$rowid), collapse='-')}_{stat}.csv")
+    
+    oh_block_stats(d_lyrs_b$path_tif, stat=stat, csv, redo=F)
+  }
+}
+
+```
+
+
+### All layers, run in batches of 100
+
+```{r}
+# get raster area per cell
+r_a <- oh_rast("area_m2")        # plot(r)
+r_z <- oh_rast("zone_id")   # plot(r_z)
+# range(values(r_a, na.rm = T))  # 102,210 to 192,743
+
+n_batch <- 100
+d_lyrs <- d_lyrs %>% 
+  arrange(aphia_id) %>% 
+  # select(-rowid) %>% 
+  rowid_to_column("rowid") %>% 
+  mutate(
+    batchid = rowid %/% n_batch + 1)
+i_beg <- min(d$batchid) 
+i_end <- max(d$batchid)
+pb <- progress_bar$new(
+  format = "  zone stats [:bar] :current/:total (:percent) in :elapsed; eta: :eta",
+  total = i_end - i_beg, clear = FALSE, width=60)
+for (b in unique(d$batchid)){  # b = 1
+  pb$tick()
+  
+  # limit data to batch
+  # d_b <- d %>% 
+  #   filter(batchid == !!b)
+  d_b <- d %>% 
+    slice(1:5)
+  
+  # get raster stack of paths
+  stk <- rast(d_b$path_tif)
+  
+  # TODO: per below ...
+}
+```
+
+### Some layers, full stack
+
+```{r test partial stack eval~F}
+#| eval: false
+
+# get full stack ----
+#stk <- rast(d$path_tif[1:20])
+stk <- rast(d$path_tif[1:500])
+
+# test map algebra on full stack: ~nogo ----
+
+offhabr::oh_blocks
+
+# system.time({
+#   stk_abundance <- sum(stk, na.rm=T)
+# }) # 20: 9.8 sec
+
+system.time({
+  d_z_mean <- zonal(stk, r_z, "mean", na.rm=T) %>% 
+  pivot_longer(
+    !zone_id,
+    names_to       = "lyr_key",
+    values_to      = "mean",
+    values_drop_na = T)
+}) # 20: 7.3 sec (0.365 ea) sec; 100: 32.5 sec (0.325 ea); 500: 492.8 sec (0.986 ea)
+# GEE 20: 41.2 sec (2.06 ea)
+# 1,000
+#   Error: Unable to establish connection with R session when executing 'console_input'
+# nrow(d) / 100 * 0.325 = 36.54625
+
+system.time({
+  d_z_notNA <- zonal(stk, r_z, "notNA") %>% 
+  pivot_longer(
+    !zone_id,
+    names_to       = "lyr_key",
+    values_to      = "notNA",
+    values_drop_na = T) %>% 
+    filter(notNA > 0)
+}) # 20: 7.1 sec
+system.time({
+  d_z_sum <- zonal(stk, r_z, "sum", na.rm = T) %>% 
+  pivot_longer(
+    !zone_id,
+    names_to       = "lyr_key",
+    values_to      = "sum",
+    values_drop_na = T)
+}) # 20: 7.0 sec
+
+d_z <- d_z_sum %>% 
+  full_join(
+    d_z_notNA, by = c("zone_id", "lyr_key")) %>% 
+  full_join(
+    d_z_mean, by = c("zone_id", "lyr_key"))
+
+d_z <- d_z %>% 
+  mutate(
+    mean_x_notNA = mean * notNA,
+    sum_sub_mean_x_notNA = sum - mean_x_notNA)
+range(d_z$sum_sub_mean_x_notNA, na.rm = T)
+# -3.725290e-09  7.450581e-09
+```
+
+## sunburst viz
+
+```{r}
+librarian::shelf(
+  plotly)
+
+rx_lyr <- "([a-z]{2})_([0-9]+)"
+d_z <- d_z %>% 
+  mutate(
+    ds_key    = str_replace(lyr_key, rx_lyr, "\\1"),
+    aphia_id  = str_replace(lyr_key, rx_lyr, "\\2") %>% 
+      as.integer())
+
+
+devtools::load_all("~/Github/ecoquants/offhabr")
+con <- oh_con() # dbDisconnect(con, shutdown=T)
+DBI::dbListTables(con)
+
+aphia_ids <- d_z$aphia_id
+d_taxa <- tbl(con, "taxa_wm") %>% 
+  filter(aphia_id %in% aphia_ids) %>% 
+  collect()
+stopifnot(setdiff(d_z$aphia_id, d_taxa$aphia_id) == 0)
+
+
+d_z_1 <- d_z
+d_z <- d_z_1 %>% 
+  left_join(
+    d_taxa, by = "aphia_id")
+d_taxa %>% colnames() %>% paste(collapse=", ")
+# kingdom, phylum, class, order, family, genus, scientificname
+#   family <chr>, genus
+table(d_z$phylum)
+
+table(d_z$class)
+table(d_z$order)
+table(d_z$family)
+table(d_z$genus)
+table(d_z$scientificname)
+
+d_s <- d_z %>% 
+plotly::sun
+
+View(d_taxa)
+d_z %>% colnames()
+```
+
+## sunburstR
+
+* [Sunburst 2.0.0](https://cran.r-project.org/web/packages/sunburstR/vignettes/sunburst-2-0-0.html)
+
+```{r}
+librarian::shelf(
+  d3r, htmltools, sunburstR)
+
+d_z %>% 
+  filter(zone_id == 1) %>% 
+  select(
+    kingdom, class, order, family, genus, scientificname, 
+    size = sum) %>% 
+  d3_nest(value_cols = "size") %>% 
+  sund2b(
+    valueField = "size",
+    width      = "100%",
+    rootLabel  = "ALL",
+    showLabels = T,
+    tooltip    = sund2bTooltip(
+      html = htmlwidgets::JS("
+        function(nodedata, size, percent) {
+          return nodedata.colname + ': <span style=\"font-weight: bold;\">' + nodedata.name + '</span>' + ' ' + size
+        }")),
+    breadcrumbs = sund2bBreadcrumb(
+      html = htmlwidgets::JS("
+        function(nodedata, size, percent) {
+          return nodedata.colname + ': <span style=\"font-weight: bold;\">' + nodedata.name + '</span>' + ' ' + size
+        }
+      ")))
+# sb
+```
+
+### complementary treemap
+
+```{r}
+librarian::shelf(
+  timelyportfolio/d3treeR, treemap)
+
+data(GNI2014)
+  tm <- treemap(GNI2014,
+          index=c("continent", "iso3"),
+          vSize="population",
+          vColor="continent",
+          type="index")
+
+
+tm <- d_z %>% 
+  filter(zone_id == 1) %>% 
+  select(
+    # kingdom, class, order, family, genus, scientificname, 
+    order, family, genus, scientificname, 
+    size = sum) %>% 
+  treemap(
+    # index = c("kingdom", "class", "order", "family", "genus", "scientificname"),
+    index = c("order", "family", "genus", "scientificname"),
+    vSize = "size",
+    vColor = "order",
+    type = "index")
+
+d3tree2(tm,  rootname = "General" )
+```
+
+### highcharts
+
+```{r}
+librarian::shelf(
+  dplyr, gapminder, highcharter)
+
+data(gapminder, package = "gapminder")
+
+gapminder_2007 <- gapminder::gapminder %>%
+  filter(year == max(year)) %>%
+  mutate(pop_mm = round(pop / 1e6))
+
+dout <- data_to_hierarchical(gapminder_2007, c(continent, country), pop_mm)
+
+hchart(dout, type = "sunburst")
+
+hchart(dout, type = "treemap")
+
+```
+
+
+### Full Stack: nogo (10 hrs or 3 TB disk space needed)
+
+```{r test full stack eval~F}
+#| eval: false
+
+# get full stack ----
+stk <- rast(d$tif)
+
+# test map algebra on full stack: ~nogo ----
+
+system.time({
+  stk_abundance <- sum(stk, na.rm)
+})
+#     user    system   elapsed             
+# 32997.621  2175.478 38518.750 # 10.7 hrs
+
+system.time({
+  r_presence <- sum(!is.na(stk), na.rm = T)
+})
+# Error: [is.na] insufficient disk space. Estimated need: 3433GB. Available: 938 GB. Timing stopped at: 0.312 0.159 0.504
+```
+
+### Test by Zones
+
+```{r test zones}
+oh_zones %>% 
+  arrange(area_km2) %>% 
+  st_drop_geometry() %>% 
+  select(zone_id, zone_key, area_km2, zone_name) %>% 
+  datatable()
+#    zone_id zone_key   area_km2                               zone_name
+# 1       10   mda-se   3017.723                Mid Atlantic - Southeast
+# 2       16   soa-se   7763.877              South Atlantic - Southeast
+# ...
+# 21      17   soc-na 231700.627     Southern California - Not Available
+# 22       8   mda-na 289341.064            Mid Atlantic - Not Available
+
+# smallest zone ----
+r_z10 <- r_z
+r_z10[r_z != 10] <- NA  # plot(trim(r_z10))
+r_z10 <- trim(r_z10)
+
+s_z10_tif      <- glue("{dir_tif}/s_z10.tif")
+r_sum_z10_tif  <- glue("{dir_tif}/r_sum_z10.tif")
+r_pres_z10_tif <- glue("{dir_tif}/r_presence_z10.tif")
+
+# biggest zone ----
+r_z8 <- r_z
+r_z8[r_z != 8] <- NA
+r_z8 <- trim(r_z8)  # plot(r_z8)
+
+s_z8_tif      <- glue("{dir_tif}/s_z8.tif")
+r_sum_z8_tif  <- glue("{dir_tif}/r_sum_z8.tif")
+r_pres_z8_tif <- glue("{dir_tif}/r_presence_z8.tif")
+```
+
+#### Smallest Zone
+
+```{r test smallest zone eval~F}
+#| eval: false
+
+# stk <- rast(d$path_tif[1:10])
+# stk <- rast(d$path_tif)
+
+devtools::load_all("~/Github/ecoquants/offhabr")
+
+con <- oh_con(read_only=T)
+
+tifs10 <- tbl(con, "lyr_zones") %>% 
+  filter(zone_id == 10) %>% 
+  left_join(
+    tbl(con, "lyrs"),
+    by = "lyr_key") %>% 
+  pull(tif)
+
+dbDisconnect(con)
+
+stk10 <- rast(tifs10)
+
+# i <- 1
+# r <- rast(d$path_tif[i])
+# r[r > 0] <- 1
+# plot(r)
+# sv_oh_zones_s1k <- terra::vect(st_transform(oh_zones_s1k, 3857))
+# plet(r, tiles="Esri.NatGeoWorldMap")
+# plot(r)
+# polys(sv_oh_zones_s1k)
+# plet(r_z, tiles="Esri.NatGeoWorldMap")
+# 
+# View(d_z)
+# r_z
+# r <- rast(d$path_tif[1])
+# r[r > 0] <- 1
+# plot(r)
+# basename(d$path_tif[1]) %>% fs::path_ext_remove()
+# names(r)
+# writeRaster(r, glue("{dir_tif}/{names(r)}_presence.tif"), datatype="INT1U")
+# write_rast(r, glue("{dir_tif}/{names(r)}_presence_oh.tif"))
+# writeRaster(r, glue("{dir_tif}/{names(r)}_presence_log1s.tif"), datatype="LOG1S")
+
+s_z10c_tif  <- glue("{dir_tif}/s_z10c.tif")
+s_z10cm_tif <- glue("{dir_tif}/s_z10cm.tif")
+
+system.time({
+  s_z10c <- crop(stk10, r_z10, filename = s_z10c_tif, overwrite = T)  # 9.7 -> 2.0 min (after lyr_zones)
+})
+summary(s_z10c)
+
+system.time({
+  s_z10 <- mask(s_z10c, r_z10, filename = s_z10cm_tif, overwrite = T) # 2.3 -> 5.9 min ? (after lyr_zones)
+})
+# nlyr(s_z10) # 11,246 -> 5,390 (after lyr_zones)
+
+system.time({
+  write_rast(s_z10, s_z10_tif) # 13,048,764 ->       # 9.9 min (after lyr_zones)
+})
+file.size(s_z10_tif)
+
+system.time({
+  # s_z10 <- rast(s_z10_tif)
+  r_sum_z10 <- sum(s_z10, na.rm=T) %>%    # range: 8,313; 397,884    # 0.6 min
+    mask(r_z10)
+  # plet(r_sum_z10, tiles="Esri.NatGeoWorldMap")
+  write_rast(r_sum_z10, r_sum_z10_tif, datatype="INT4U") 
+}) # 37.730
+```
+
+#### Biggest Zone
+
+```{r test biggest zone eval~F}
+#| eval: false
+
+s_z8c_tif  <- glue("{dir_tif}/s_z8c.tif")
+s_z8cm_tif <- glue("{dir_tif}/s_z8cm.tif")
+
+system.time({
+  s_z8c <- crop(stk, r_z8, filename = s_z8c_tif, overwrite = T)    # 107.9 min
+})
+system.time({
+  s_z8 <- mask(s_z8c, r_z8, filename = s_z8cm_tif, overwrite = T)  #  28.3 min
+})
+system.time({
+  write_rast(s_z8, s_z8_tif)                                       #  75.2 min
+})
+
+system.time({
+  r_sum_z8 <- sum(s_z8, na.rm=T) %>%    # range: 2,550; 408,372         #   7.8 min
+    mask(r_z8)
+  write_rast(r_sum_z8, r_sum_z8_tif, datatype="INT4U")
+})
+
+system.time({
+  r_presence_z8 <- sum(s_z8 > 0, na.rm=T) %>%    # range: 2,550; 408,372         #   7.8 min
+    mask(r_z8)
+  write_rast(r_presence_z8, r_presence_z8_tif, datatype="INT4U")
+})
+```
+
+```{r map biggest zone}
+# s_z8 <- rast(s_z8_tif)
+# plot(s_z8[[1]])
+# r_z8_1 <- terra::subset(s_z8, "am_100599")
+# terra::plet(r_z8_1)
+
+r_sum_z8 <- rast(r_sum_z8_tif) %>% 
+  mask(r_z10)
+# plot(r_sum_z10)
+plet(r_sum_z10, tiles="Esri.NatGeoWorldMap")
+```
+
+You can add options to executable code like this 
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

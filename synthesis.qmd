@@ -1,0 +1,75 @@
+---
+title: "Synthesis"
+format: 
+  html:
+    code-fold: true
+    embed-resources: false
+---
+
+## Zones
+
+```{r}
+#| warning: false
+#| include: false
+librarian::shelf(
+  devtools, dplyr, DT, knitr, sf,
+  cran_repo = "https://cran.rstudio.com")
+load_all("../offhabr")
+```
+
+```{r}
+#| label: fig-map-zones
+#| fig-cap: Map of Zones
+#| warning: false
+oh_map() %>% 
+  oh_add_ply(
+    ply     = oh_zones_s1k, 
+    fld_val = area_km2,
+    fld_id  = zone_name,
+    str_val = "area (km^2)",
+    str_id  = "Zone")
+```
+
+```{r}
+#| label: tbl-zones
+#| tbl-cap: "Table of Zones"
+oh_zones_s1k %>% 
+  st_drop_geometry() %>% 
+  datatable()
+```
+
+See @tbl-zones and @fig-map-zones.
+
+## Zone: Northern California (noc)
+
+Choosing Northern California (noc) because it's the only one with hydrothermal vents and seamounts.
+
+```{r}
+con <- oh_pg_con()
+
+# by zone
+
+# uncollected sql of cell_ids (for given zone_key)
+zone_key = "noc"
+s_c <- tbl(con, "oh_zones") %>%
+  select(zone_key, zone_id) %>% 
+  filter(zone_key == !!zone_key) %>%
+  left_join(
+    tbl(con, "oh_cells") %>% 
+      # get block and elev too
+      select(cell_id, zone_id, block_id, elev),
+    by = "zone_id") %>% 
+  select(cell_id, zone_id, block_id, elev)
+  
+# sw_density
+s_sw <- tbl(con, "sw_density") %>%
+  # filter(aphia_id == 137087) %>% # Minke whale
+  select(aphia_id, density, ply_id) %>% 
+  left_join(
+    tbl(con, "oh_cells_ply") %>%
+      filter(tbl == "sw_density_ply") %>%
+      select(cell_id, mdl_id), 
+    by = "ply_id")
+
+
+```

@@ -1,0 +1,920 @@
+---
+title: "rgee"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+librarian::shelf(
+  glue, reticulate, r-spatial/rgee)
+
+# devtools::session_info()
+# package     * version    date (UTC) lib source
+# rgee        * 1.1.6      2023-01-10 [1] Github (r-spatial/rgee@8e4899a)
+
+# set gcloud path
+Sys.setenv(PATH=glue("{Sys.getenv('PATH')}:/Users/bbest/google-cloud-sdk/bin"))
+# ee_Authenticate()
+# Credentials saved to file: [/Users/bbest/.config/gcloud/application_default_credentials.json]
+
+# ee_check_gcloud()
+ee_Initialize()
+# ── rgee 1.1.6 ─────────────────────────────────────────────── earthengine-api 0.1.335 ── 
+#  ✔ user: not_defined 
+#  ✔ Initializing Google Earth Engine:  DONE!
+#  ✔ Earth Engine account: users/ben-ecoquants 
+# ──────────────────────────────────────────────────────────────────────────────────────── 
+
+# ==> WARNING: A newer version of conda exists. <==
+#   current version: 4.14.0
+#   latest version: 22.11.1
+# miniconda_update()
+
+# install geemap in the same Python ENV that use rgee
+if (!py_module_available("geemap"))
+  py_install("geemap")
+gm <- import("geemap")
+```
+
+## Setup `rgee`
+
+* [R Bindings for Calling the Earth Engine API • rgee](https://r-spatial.github.io/rgee/#installation)
+
+```{r}
+#| eval: false
+
+# rgee::ee_install_set_pyenv(
+#   py_path = "/opt/homebrew/bin/python3",
+#   py_env = NULL)
+
+# EARTHENGINE_PYTHON='/opt/homebrew/bin/python3'
+#   saved in: /Users/bbest/.Renviron
+
+# ee_check() # Check non-R dependencies
+# ◉  Python version
+# ✔ [Ok] /Users/bbest/Library/r-miniconda-arm64/envs/r-reticulate/bin/python v3.8
+# ◉  Python packages:
+# ✔ [Ok] numpy
+# ✔ [Ok] earthengine-api
+# NOTE: The Earth Engine Python API version 0.1.335 is installed
+# correctly in the system but rgee was tested using the version
+# 0.1.323. To avoid possible issues, we recommend install the
+# version used by rgee (0.1.323). You might use:
+# * rgee::ee_install_upgrade()
+# * reticulate::py_install('earthengine-api==0.1.323', envname='PUT_HERE_YOUR_PYENV')
+# * pip install earthengine-api==0.1.323 (Linux and Mac0S)
+# * conda install earthengine-api==0.1.323 (Linux, Mac0S, and Windows)
+```
+
+## `rgee` Hello World
+
+### 1. Compute the trend of night-time lights 
+
+```{r}
+# Authenticate and Initialize the Earth Engine R API.
+library(rgee)
+ee_Initialize()
+
+# Add a band containing image date as years since 1991.
+createTimeBand <-function(img) {
+  year <- ee$Date(img$get('system:time_start'))$get('year')$subtract(1991L)
+  ee$Image(year)$byte()$addBands(img)
+}
+
+# Map the time band creation helper over the night-time lights collection.
+collection <- ee$
+  ImageCollection('NOAA/DMSP-OLS/NIGHTTIME_LIGHTS')$
+  select('stable_lights')$
+  map(createTimeBand)
+
+# Compute a linear fit over the series of values at each pixel, visualizing the y-intercept in green, and positive/negative slopes as red/blue.
+col_reduce <- collection$reduce(ee$Reducer$linearFit())
+col_reduce <- col_reduce$addBands(
+  col_reduce$select('scale'))
+ee_print(col_reduce)
+
+#Create an interactive visualization!
+Map$setCenter(9.08203, 47.39835, 3)
+Map$addLayer(
+  eeObject = col_reduce,
+  visParams = list(
+    bands = c("scale", "offset", "scale"),
+    min = 0,
+    max = c(0.18, 20, -0.18)),
+  name = "stable lights trend")
+
+```
+
+### 2. Extract precipitation values
+
+```{r}
+# Install and load tidyverse and sf R packages, and initialize the Earth Engine R API.
+library(tidyverse)
+library(rgee)
+library(sf)
+
+ee_Initialize()
+
+# Read the nc shapefile.
+nc <- st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+
+# Map each image from 2001 to extract the monthly precipitation (Pr) from the Terraclimate dataset
+terraclimate <- ee$ImageCollection("IDAHO_EPSCOR/TERRACLIMATE") %>%
+  ee$ImageCollection$filterDate("2001-01-01", "2002-01-01") %>%
+  ee$ImageCollection$map(function(x) x$select("pr")) %>% # Select only precipitation bands
+  ee$ImageCollection$toBands() %>% # from imagecollection to image
+  ee$Image$rename(sprintf("PP_%02d",1:12)) # rename the bands of an image
+
+# Extract monthly precipitation values from the Terraclimate ImageCollection through ee_extract. ee_extract works similar to raster::extract, you just need to define: the ImageCollection object (x), the geometry (y), and a function to summarize the values (fun).
+ee_nc_rain <- ee_extract(x = terraclimate, y = nc["NAME"], sf = FALSE)
+
+# Use ggplot2 to generate a beautiful static plot!
+ee_nc_rain %>%
+  pivot_longer(-NAME, names_to = "month", values_to = "pr") %>%
+  mutate(month, month=gsub("PP_", "", month)) %>%
+  ggplot(aes(x = month, y = pr, group = NAME, color = pr)) +
+  geom_line(alpha = 0.4) +
+  xlab("Month") +
+  ylab("Precipitation (mm)") +
+  theme_minimal()
+```
+
+### 3. Create an NDVI-animation
+
+```{r}
+# Install and load sf, after that, initialize the Earth Engine R API.
+librarian::shelf(
+  magick, rgee, r-earthengine/rgeeExtra, sf)
+ee_Initialize()
+
+# Define the regional bounds of animation frames and a mask to clip the NDVI data by.
+mask <- system.file("shp/arequipa.shp", package = "rgee") %>%
+  st_read(quiet = TRUE) %>%
+  sf_as_ee()
+region <- mask$geometry()$bounds()
+
+# Retrieve the MODIS Terra Vegetation Indices 16-Day Global 1km dataset as an ee.ImageCollection and select the NDVI band.
+col <- ee$ImageCollection('MODIS/006/MOD13A2')$select('NDVI')
+
+# Group images by composite date
+col <- col$map(function(img) {
+  doy <- ee$Date(img$get('system:time_start'))$getRelative('day', 'year')
+  img$set('doy', doy)
+})
+distinctDOY <- col$filterDate('2013-01-01', '2014-01-01')
+
+# Define a filter that identifies which images from the complete collection match the DOY from the distinct DOY collection.
+filter <- ee$Filter$equals(leftField = 'doy', rightField = 'doy')
+
+# Define a join; convert the resulting FeatureCollection to an ImageCollection.
+join <- ee$Join$saveAll('doy_matches')
+joinCol <- ee$ImageCollection(join$apply(distinctDOY, col, filter))
+
+# Apply median reduction among matching DOY collections.
+comp <- joinCol$map(function(img) {
+  doyCol = ee$ImageCollection$fromImages(
+    img$get('doy_matches')
+  )
+  doyCol$reduce(ee$Reducer$median())
+})
+
+# Define RGB visualization parameters.
+visParams = list(
+  min = 0.0,
+  max = 9000.0,
+  bands = "NDVI_median",
+  palette = c(
+    'FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718', '74A901',
+    '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01',
+    '012E01', '011D01', '011301'
+  )
+)
+
+# Create RGB visualization images for use as animation frames.
+rgbVis <- comp$map(function(img) {
+  do.call(img$visualize, visParams) %>%
+    ee$Image$clip(mask)
+})
+
+# Define GIF visualization parameters.
+gifParams <- list(
+  region = region,
+  dimensions = 600,
+  crs = 'EPSG:3857',
+  framesPerSecond = 10
+)
+
+# Get month names
+dates_modis_mabbr <- distinctDOY %>%
+  ee_get_date_ic %>% # Get Image Collection dates
+  '[['("time_start") %>% # Select time_start column
+  lubridate::month() %>% # Get the month component of the datetime
+  '['(month.abb, .) # subset around month abbreviations
+
+# Use ee_utils_gif_* functions to render the GIF animation and add some texts.
+animation <- ee_utils_gif_creator(rgbVis, gifParams, mode = "wb")
+# install magick dependency first in shell: brew install --cask xquartz
+animation_wtxt <- animation %>%
+  ee_utils_gif_annotate(
+    text = "NDVI: MODIS/006/MOD13A2",
+    size = 15, color = "white",
+    location = "+10+10") %>%
+  ee_utils_gif_annotate(
+    text = dates_modis_mabbr,
+    size = 30,
+    location = "+290+350",
+    color = "white",
+    font = "arial",
+    boxcolor = "#000000")
+ee_utils_gif_save(animation_wtxt, path = "rgeeExtra_raster_as_ee_wtxt.gif")
+ee_utils_gif_save(animation     , path = "rgeeExtra_raster_as_ee.gif")
+```
+
+## `tidyrgee` example
+
+```{r}
+librarian::shelf(
+  rgee, tidyrgee)
+ee_Initialize(quiet = T)
+
+modis_ic <- ee$ImageCollection("MODIS/006/MOD13Q1")
+
+modis_tidy <-  as_tidyee(modis_ic)
+modis_tidy
+# band names: [ NDVI, EVI, DetailedQA, sur_refl_b01, sur_refl_b02, sur_refl_b03, sur_refl_b07, ViewZenith, SolarZenith, RelativeAzimuth, DayOfYear, SummaryQA ] 
+# 
+# $ee_ob
+# EarthEngine Object: ImageCollection
+# $vrt
+# # A tibble: 525 × 8
+#    id         time_start          syste…¹ date       month  year   doy
+#    <chr>      <dttm>              <chr>   <date>     <dbl> <dbl> <dbl>
+#  1 MODIS/006… 2000-02-18 00:00:00 2000_0… 2000-02-18     2  2000    49
+#  2 MODIS/006… 2000-03-05 00:00:00 2000_0… 2000-03-05     3  2000    65
+
+# filter by date
+modis_tidy   |> 
+  filter(date>="2021-06-01")  # note: char fine for date
+
+# filter by year
+modis_tidy   |> 
+  filter(year%in% 2010:2011)
+
+# filter by month
+modis_tidy   |> 
+  filter(month%in% c(7,8))
+
+# pipe collection to get monthly average
+modis_tidy |> 
+  select("NDVI") |> 
+  filter(year %in% 2000:2015) |> 
+  group_by(month) |> 
+  summarise(stat= "mean")
+
+# return the tidyee object back to rgee classes when necessary
+modis_ic <- modis_tidy |> as_ee()
+```
+
+## offhab: gsync `lyrs_ds_aphia`
+
+In [EE console](https://code.earthengine.google.com/), check Assets > Cloud Assets > **ee-offhab** > Quota Usage:
+
+```
+Asset quota
+Usage details for "projects/ee-offhab":
+                  Current         Maximum
+Total file size:  815.68MB (<1%)	250GB
+Number of assets: 11,243 (22%)	  50,000
+```
+
+### get tifs not found in ee
+
+```{r}
+librarian::shelf(
+  dplyr, fs, glue, jsonlite, purrr, rgee, stringr, tidyrgee)
+ee_Initialize(quiet = T)
+
+ic_taxa_id <- "projects/ee-offhab/assets/lyrs_ds_aphia"
+rx_lyr     <- "([a-z]{2})_([0-9]+)"
+dir_tif    <- "/Users/bbest/My Drive/projects/offhab/data/_lyrs"
+
+# get ImageCollection
+ic_taxa <- ee$ImageCollection(ic_taxa_id)
+
+# get count
+count <- ic_taxa$size()
+message(glue("Count: ", count$getInfo())) # 11,242
+
+# as tidyee
+d_eetaxa <- as_tidyee(ic_taxa)
+# Error in rgee::ee_get_date_ic(x, time_end = time_end) : 
+#   Imposible to create a data.frame with:
+# system:id -> 4843 [1970-01-01, ...., 1970-01-01]
+# system:time_stars -> 11242 [projects/ee-offhab/assets/lyrs_ds_aphia/am_100599, ...., projects/ee-offhab/assets/lyrs_ds_aphia/rl_993100]
+
+# extract parts
+d_eetaxa <- d_eetaxa %>%
+  mutate(
+    lyr_key  = path_file(id),
+    ds_key   = str_replace(lyr_key, rx_lyr, "\\1"),
+    aphia_id = str_replace(lyr_key, rx_lyr, "\\2") %>% as.integer())
+nrow(d_eetaxa[["vrt"]])  # 6,399
+
+d_tif <- tibble(
+  tif = dir_ls(dir_tif, glob="*.tif")) %>% 
+  mutate(
+    lyr_key  = path_ext_remove(path_file(tif)),
+    ds_key   = str_replace(lyr_key, rx_lyr, "\\1"),
+    aphia_id = str_replace(lyr_key, rx_lyr, "\\2") %>% as.integer())
+nrow(d_tif)  # 11,246
+
+d_tif_todo <- d_tif %>% 
+  anti_join(d_eetaxa[["vrt"]], by="lyr_key")
+nrow(d_tif_todo)  # 4,847
+```
+
+### check for tifs to still upload into gcloud
+
+```{r}
+Sys.setenv(
+  "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
+  "GCS_AUTH_FILE" = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+librarian::shelf(
+  googleCloudStorageR)
+
+# demo_data <- data.frame(a = 1:10, b = 1:10)
+# 
+# googleCloudStorageR::gcs_upload(
+#   file = demo_data,
+#   name = "demo_data.csv",
+#   bucket = "offhab_lyrs" # Bucket with uniform control access
+# )
+# 
+# ## get your project name from the API console
+# proj <- "offhab"
+# 
+# ## get bucket info
+# buckets <- gcs_list_buckets(proj)
+# bucket <- buckets$name[1]  # offhab_lyrs
+# bucket_info <- gcs_get_bucket(bucket)
+# bucket_info
+
+d_gcs <- gcs_list_objects()
+
+d_gcs <- d_gcs %>% 
+  tibble() %>% 
+  mutate(
+    lyr_key  = path_ext_remove(name))
+sum(duplicated(d_gcs$name))
+
+d_gcs_todo <- d_tif_todo %>% 
+  anti_join(d_gcs, by="lyr_key")
+nrow(d_gcs_todo) # 0
+# so no files to still upload
+# tif <- d_tif_todo$tif[1]
+# gcs_upload(
+#   tif, name = path_file(tif))
+# gcs_delete_object(path_file(tif))
+```
+
+answer: none
+
+## add gcs tif to ee.ic
+
+Add Google Cloud Storage (gcs) *.tif to Earth Engine (ee) ImageCollection (ic),
+ie `ic_taxa_id <- "projects/ee-offhab/assets/lyrs_ds_aphia"`
+
+```{r}
+librarian::shelf(
+  glue, progress, rgee, stars)
+
+# setup
+# rgee::ee_utils_sak_copy(sakfile = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+ee_Initialize(gcs = TRUE)
+# ── rgee 1.1.6 ───────────────────────────────── earthengine-api 0.1.334 ── 
+#  ✔ user: not_defined 
+#  ✔ GCS credentials:  FOUND
+#  ✔ Initializing Google Earth Engine:  DONE!
+#  ✔ Earth Engine account: users/ben-ecoquants 
+# ────────────────────────────────────────────────────────────────────────── 
+
+d_tif_todo <- d_tif_todo %>% 
+  mutate(
+    gs_uri = glue("gs://offhab_lyrs/{lyr_key}.tif"),
+    ee_id  = glue("projects/ee-offhab/assets/lyrs_ds_aphia/{lyr_key}"))
+
+i_beg <- 22
+i_end <- nrow(d_tif_todo)
+pb <- progress_bar$new(
+  format = "  gcs to ee [:bar] :current/:total (:percent) in :elapsed; eta: :eta",
+  total = i_end - i_beg, clear = FALSE, width=60)
+for (i in i_beg:i_end){ # i=14
+  # message(glue("{i} of {n} ~ {Sys.time()}"))
+  pb$tick()
+
+  gs_uri <- d_tif_todo$gs_uri[i]
+  ee_id  <- d_tif_todo$ee_id[i]
+  properties <- list(
+    lyr_key  = d_tif_todo$lyr_key[i],
+    ds_key   = d_tif_todo$ds_key[i],
+    aphia_id = d_tif_todo$aphia_id[i])
+  
+  stopifnot(d_eetaxa[["vrt"]] %>% 
+    filter(lyr_key == d_tif_todo$lyr_key[i]) %>% 
+    nrow() == 0)
+  
+  manifest_list <- ee_utils_create_manifest_image(
+    gs_uri = gs_uri, 
+    assetId = ee_id,
+    properties = properties,
+    returnList = T)
+  manifest_list$name <- ee_id
+  manifest_list$missing_data <- list(values = c(255))
+  manifest_json <- ee_utils_create_json(manifest_list)
+  # readLines(manifest_json) %>% cat()
+  
+  suppressMessages(
+    gcs_to_ee_image(
+    manifest_json,
+    overwrite = T,
+    quiet = T) )
+}
+
+# OPTIONAL: Monitoring progress
+ee_monitoring()
+
+# OPTIONAL: Display results
+ee_img <- ee$Image(ee_id)
+ee_img$bandNames()$getInfo() # "b1"
+
+Map$centerObject(ee_img)
+Map$addLayer(
+  ee_img, 
+  list(min = 0, max = 100, bands = c("b1")))
+
+# TODO: rm temporary manifest_json files
+file_delete(manifest_json)
+```
+
+### rgee::`gcs_to_ee_image()`
+
+```{r}
+# 1. Read GeoTIFF file and create a output filename
+tif <- system.file("tif/L7_ETMs.tif", package = "stars")
+x <- read_stars(tif)
+assetId <- sprintf("%s/%s",ee_get_assethome(),'stars_l7')
+
+# 2. From local to gcs
+gs_uri <- local_to_gcs(
+  x = tif,
+  bucket = 'offhab_lyrs' # Insert your own bucket here!
+)
+
+# 3. Create an Image Manifest
+manifest <- ee_utils_create_manifest_image(
+  gs_uri, 
+  assetId)
+readLines(manifest) %>% cat()
+
+# 4. From GCS to Earth Engine
+gcs_to_ee_image(
+  manifest = manifest,
+  overwrite = TRUE
+)
+# Running the OS command: earthengine upload image --manifest /var/folders/sl/7s3zmk1129jcrgsn1c4hcs2r0000gn/T//RtmpLnFxy0/filea6796efe210a_manifest.json
+# Started upload task with ID: ZCMQFR2HABGCG42UYI2TGCCB
+
+
+# OPTIONAL: Monitoring progress
+ee_monitoring()
+
+# OPTIONAL: Display results
+ee_stars_01 <- ee$Image(assetId)
+ee_stars_01$bandNames()$getInfo()
+
+Map$centerObject(ee_stars_01)
+Map$addLayer(
+  ee_stars_01, 
+  list(min = 0, max = 255, bands = c("b3", "b2", "b1")))
+```
+
+
+## add `time_start` to image assets where missing
+
+for sake of using `tidyrgee`
+
+```{r}
+librarian::shelf(
+  dplyr, fs, glue, jsonlite, purrr, progress, rgee, stringr, tidyrgee)
+ee_Initialize(quiet = T)
+
+ic_taxa_id <- "projects/ee-offhab/assets/lyrs_ds_aphia"
+
+# get ImageCollection
+ic_taxa <- ee$ImageCollection(ic_taxa_id)
+
+# get count
+n_imgs <- ic_taxa$size()$getInfo()
+message(glue("Count: ", n_imgs)) # 11,242
+
+# get time_starts
+time_starts <- ic_taxa$aggregate_array("system:time_start")$getInfo()
+
+# get image_ids
+image_ids <- ic_taxa$aggregate_array("system:id")$getInfo()
+if (length(time_starts) < length(image_ids)){
+  
+  # iterate over images
+  i_beg <- 1
+  i_end <- length(image_ids)
+  pb <- progress_bar$new(
+    format = "  img date update [:bar] :current/:total (:percent) in :elapsed; eta: :eta",
+    total = i_end - i_beg + 1, clear = FALSE, width=60)
+  for (i in i_beg:i_end){ # i = 2 # i = 11242 - 4843 # i=32  # i=31
+    image_id <- image_ids[i]
+    pb$tick()
+    
+    # resp <- system(
+    #   glue("earthengine asset info {image_id}"),
+    #   intern = T) %>%
+    #   parse_json()
+    # if (!"startTime" %in% names(resp) || resp$startTime != "1970-01-01T00:00:00Z"){
+    #   # set startTime...
+    # }
+    # above: works, but too slow
+    
+    img <- ee$Image(image_id)
+    if (!"system:time_start" %in% img$propertyNames()$getInfo()){
+      # ee$data$setAssetProperties(
+      #   image_id,
+      #   list("system:time_start" = 0))
+      # img$set(list(`system:time_start`=0))
+      # img$date()$getInfo()
+      # above doesn't work for this special system:time_start attr, so using below
+      system(
+        glue("earthengine asset set --time_start 0 {image_id}"),
+        intern = T, wait = T)
+    }
+  }
+}
+```
+
+## calc metrics with tidyrgee
+
+### upload zones
+
+```{r}
+librarian::shelf(
+  devtools, mapview, 
+  # rgee, 
+  raster, sf, terra)
+load_all("~/Github/ecoquants/offhabr")
+load_all("~/Github/bbest/rgee")
+ee_Initialize(gcs = TRUE)
+
+# offhabr::oh_zones %>% 
+#   filter(zone_version == 1) %>% 
+#   mapView()
+# offhabr::oh_zones %>% 
+#   filter(zone_version == 2) %>% 
+#   mapView()
+
+fc_zones <- rgee::sf_as_ee(
+  offhabr::oh_zones, 
+  via        = "gcs_to_asset",
+  assetId    = "projects/ee-offhab/assets/fc_zones",
+  bucket     = "offhab_lyrs",
+  proj       = "EPSG:4326",
+  monitoring = T,
+  quiet      = F)
+```
+
+### upload `r_oh_zones_v1`, `r_oh_zones_v2` 
+
+```{r}
+Sys.setenv(
+  "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
+  "GCS_AUTH_FILE"      = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+librarian::shelf(
+  devtools, dplyr, fs, glue, googleCloudStorageR, mapview, purrr, 
+  # rgee, 
+  sf, stringr, terra, tidyrgee)
+load_all("~/Github/bbest/rgee")
+load_all("~/Github/ecoquants/offhabr")
+ee_Initialize(gcs = T, quiet = F)
+
+for (v in 1:2){ # v=2
+  z_tif     <- glue("~/Github/ecoquants/offhabr/inst/oh_zones_v{v}.tif")
+  #gs_uri   <- glue("gs://offhab_lyrs/oh_zones_v{v}.tif")
+  ee_id     <- glue("projects/ee-offhab/assets/im_zones_v{v}")
+  gs_bucket <- "offhab_lyrs"
+  
+  gs_uri <- local_to_gcs(
+    x      = z_tif,
+    bucket = gs_bucket,
+    # predefinedAcl = predefinedAcl,
+    quiet  = F)
+  
+  manifest_list <- ee_utils_create_manifest_image(
+    gs_uri     = gs_uri, 
+    assetId    = ee_id,
+    properties = list(
+      ds_key   = "oh",
+      lyr_key  = glue("zones_v{v}"),
+      aphia_id = 0L),
+    returnList = T)
+  manifest_list$tilesets[[1]]$crs       <- "EPSG:3857"
+  manifest_list$tilesets[[1]]$data_type <- "UINT8"
+  manifest_list$name                    <- ee_id
+  manifest_list$missing_data            <- list(values = c(255L))
+  manifest_json <- ee_utils_create_json(manifest_list)
+  # system(glue("open {manifest_json}"))
+  # readLines(manifest_json) %>% cat()
+  
+  gcs_to_ee_image(
+    manifest_json,
+    overwrite = T,
+    quiet = F)
+  
+  # ee_monitoring()
+  
+  # r_z   <- rast(z_tif)  # plet(r_z, tiles="Esri.NatGeoWorldMap")
+  # min_r <- global(r_z, "min", na.rm=T)[[1]] #  1
+  # max_r <- global(r_z, "max", na.rm=T)[[1]] # 11
+  # ee_z <- ee$Image(ee_id)
+  # ee_z$bandNames()$getInfo()
+  # Map$centerObject(ee_z)
+  # Map$addLayer(ee_z, list(min = min_r, max = max_r, bands = c("b1")))
+}
+```
+
+## get zonal stats
+
+- combine stats (mean, min, max, count, stdev) per zone X sp
+- get area? (later feed into endemism)
+- use `reduce(group=img)` to speed up zonal stats (vs featurecollection vector to raster)
+
+- [rgee `zonal_statistics.R`](https://github.com/csaybar/rgee/blob/examples//Reducer/zonal_statistics.R)
+
+```{r}
+# get image of zones
+im_zones_v1 <- ee$Image("projects/ee-offhab/assets/im_zones_v1")
+
+# get imagecollection of layers
+ic_taxa <- ee$ImageCollection("projects/ee-offhab/assets/lyrs_ds_aphia")
+
+# get subset of layers for testing
+lyr_keys <- ee$List(ic_taxa$aggregate_array("lyr_key"))$getInfo()
+lyrs <- ee$List(lyr_keys[1:3])
+ic_lyrs <- ic_taxa$filter(ee$Filter$inList("lyr_key", lyrs))
+n_lyrs <- ic_lyrs$size()$getInfo()
+
+# append zones to subset of layers
+ic_lyrs_z <- ic_lyrs$merge(im_zones_v1)
+
+# Grouped a mean 'reducer': change of nightlights by land cover category.
+im_lyrs_mean <- ic_lyrs_z$reduce(ee$Reducer$mean())
+band <- im_lyrs_mean$bandNames()$getInfo()
+
+image_ids <- ic_taxa$aggregate_array("system:id")$getInfo()
+
+i <- 1
+img <- ee$Image(image_ids[1])
+img$reduceRegions
+
+img <- img$addBands(im_zones_v1)
+img$bandNames()$getInfo()
+
+means <- img$reduceRegions(
+  reducer = ee$Reducer$mean()$group(
+    groupField = 1,
+    groupName = "zone_id"),
+  geometry = img$geometry(),
+  scale     = 1000,
+  maxPixels = 1e8)
+
+var means = nlDiff.reduceRegion({
+  reducer: ee.Reducer.mean().group({
+    groupField: 1,
+    groupName: 'code',
+  }),
+  geometry: region.geometry(),
+  scale: 1000,
+  maxPixels: 1e8
+});
+
+# Display the mean image.
+Map$addLayer(
+  eeObject = im_lyrs_mean,
+  vizParams <- list(
+    bands = band,
+    max   = 100),
+  name = "mean")
+
+
+means <- ic_lyrs_z$reduceRegions(
+  reducer = ee$Reducer$mean()$group(
+    groupField = n_lyrs, # 0-indexed
+    groupName = "zone_id"),
+  geometry = im_zones_v1$geometry(),
+  scale     = 1000,
+  maxPixels = 1e8)
+
+# Print the resultant Dictionary.
+print(means$getInfo())
+
+means <- ic_lyrs_z %>% 
+  ee$ImageCollection$reduce(
+    reducer = ee$Reducer$mean()
+    ee$
+    ,
+    groupField = n_lyrs+1,
+    groupName = "zone_id")
+
+.reduceRegion({
+  reducer: ee .Reducer.mean().group({
+    groupField: 1,
+    groupName: 'code',
+  }),
+  geometry: region.geometry(),
+  scale: 1000,
+  maxPixels: 1e8
+});
+```
+
+### ee_js group example
+
+```js
+// Load a region representing the United States
+var region = ee.FeatureCollection('USDOS/LSIB_SIMPLE/2017')
+  .filter(ee.Filter.eq('country_na', 'United States'));
+
+// Load MODIS land cover categories in 2001.
+var landcover = ee.Image('MODIS/051/MCD12Q1/2001_01_01')
+  // Select the IGBP classification band.
+  .select('Land_Cover_Type_1');
+
+// Load nightlights image inputs.
+var nl2001 = ee.Image('NOAA/DMSP-OLS/NIGHTTIME_LIGHTS/F152001')
+  .select('stable_lights');
+var nl2012 = ee.Image('NOAA/DMSP-OLS/NIGHTTIME_LIGHTS/F182012')
+  .select('stable_lights');
+
+// Compute the nightlights decadal difference, add land cover codes.
+var nlDiff = nl2012.subtract(nl2001).addBands(landcover);
+
+// Grouped a mean reducer: change of nightlights by land cover category.
+var means = nlDiff.reduceRegion({
+  reducer: ee.Reducer.mean().group({
+    groupField: 1,
+    groupName: 'code',
+  }),
+  geometry: region.geometry(),
+  scale: 1000,
+  maxPixels: 1e8
+});
+
+// Print the resultant Dictionary.
+print(means);
+```
+
+
+### rgee reduce example
+
+```{r}
+# Load an image and select some bands of interest.
+image <- ee$Image("LANDSAT/LC08/C01/T1/LC08_044034_20140318")$
+  select(c("B4", "B3", "B2"))
+
+# Reduce the image to get a one-band maximum value image.
+maxValue <- image$reduce(ee$Reducer$max())
+band <- maxValue$bandNames()$getInfo()
+# Display the result.
+Map$centerObject(image, 10)
+Map$addLayer(maxValue, list(max = 13000, bands = band), "Maximum value image")
+
+# Load input imagery: Landsat 7 5-year composite.
+image <- ee$Image("LANDSAT/LE7_TOA_5YEAR/2008_2012")
+
+# Load an input region: Sierra Nevada.
+region <- ee$Feature(ee$FeatureCollection("EPA/Ecoregions/2013/L3")$
+  filter(ee$Filter$eq("us_l3name", "Sierra Nevada"))$
+  first())
+ee$Projection(image)$getInfo()
+
+# Reduce the region. The region parameter is the Feature geometry.
+meanDictionary <- image$reduceRegion(
+  reducer  = ee$Reducer$mean(),
+  geometry = region$geometry(),
+  scale = 30,
+  maxPixels = 1e9)
+
+# The result is a Dictionary.  Print it.
+print(meanDictionary$getInfo())
+```
+
+
+
+
+### rgee combine stats example
+
+```{r}
+image <- ee$Image('COPERNICUS/S2/20150821T111616_20160314T094808_T30UWU')
+
+# Get mean and SD in every band by combining reducers.
+stats <- image$reduceRegion(
+  reducer = ee$Reducer$mean()$combine(
+    reducer2 = ee$Reducer$stdDev(),
+    sharedInputs = TRUE
+  ),
+  geometry = ee$Geometry$Rectangle(c(-2.15, 48.55, -1.83, 48.72)),
+  scale = 10,
+  bestEffort = TRUE # Use maxPixels if you care about scale.
+)
+
+print(stats$getInfo())
+
+# Extract means and SDs to images.
+meansImage <- stats$toImage()$select('.*_mean')
+sdsImage <- stats$toImage()$select('.*_stdDev')
+
+
+
+#gs_uri   <- glue("gs://offhab_lyrs/oh_zones_v{v}.tif")
+
+
+r_z_v2 <- oh_rast(zone_version = 2)
+
+```
+
+
+### setup  d_eetaxa
+
+```{r}
+fc_zones_id <- "projects/ee-offhab/assets/fc_zones"
+ic_taxa_id <- "projects/ee-offhab/assets/lyrs_ds_aphia"
+rx_lyr     <- "([a-z]{2})_([0-9]+)"
+
+# get FeatureCollection
+fc_zones <- ee$FeatureCollection(fc_zones_id)
+
+# get ImageCollection
+ic_taxa <- ee$ImageCollection(ic_taxa_id)
+
+# ds_keys <- ee$List(ic_taxa$aggregate_array("ds_key"))$distinct()$sort()
+# ds_keys$getInfo()
+# "am" "oa" "rl"
+lyr_keys <- ee$List(ic_taxa$aggregate_array("lyr_key"))$getInfo()
+lyrs <- ee$List(lyr_keys[1:3])
+ic_lyrs <- ic_taxa$filter(ee$Filter$inList("lyr_key", lyrs))
+ic_lyrs$size()$getInfo()
+
+image_ids <- ic_taxa$aggregate_array("system:id")$getInfo()
+
+i <- 1
+img <- ee$Image(image_ids[i])
+x <- ee_extract(
+  img, 
+  fc_zones,
+  fun   = ee$Reducer$mean(),
+  scale = 1000,
+  sf = T)
+x %>% 
+  filter(zn_vrsn == 1) %>% 
+  mapview::mapView(zcol="b1")
+x %>% 
+  filter(zn_vrsn == 2) %>% 
+  mapview::mapView(zcol="b1")
+
+# get count
+# count <- ic_taxa$size()$getInfo()
+# message(glue("Count: ", count$getInfo())) # 11,242
+
+# as tidyee
+d_eetaxa <- as_tidyee(ic_taxa)
+
+# extract parts
+d_eetaxa <- d_eetaxa %>%
+  mutate(
+    lyr_key  = path_file(id),
+    ds_key   = str_replace(lyr_key, rx_lyr, "\\1"),
+    aphia_id = str_replace(lyr_key, rx_lyr, "\\2") %>% as.integer())
+nrow(d_eetaxa[["vrt"]])  # 11,242
+
+
+d_eetaxa_3 <- d_eetaxa %>% 
+  slice(1:3)
+
+d_eetaxa_zones <- d_eetaxa |>
+  slice(1:3) |>
+  ee_extract_tidy(
+    y     = fc_zones,
+    fun   = "mean",
+    scale = 500)
+
+tidyrgee::ee_extract_tidy()
+
+
+```

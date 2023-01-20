@@ -1,6 +1,6 @@
 shinyUI(fluidPage(
 
-  titlePanel("Old Faithful Geyser Data"),
+  titlePanel("OffHab Species Maps"),
 
   sidebarLayout(
 

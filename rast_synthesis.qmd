@@ -36,9 +36,17 @@ table(d_lyrs$ds_key)
 ## Create Cloud Optimized GeoTIFFs (COGs) for relative env suitability (`res`) and presence (`prs`)
 
 ```{r}
+# TODO: fix web-optimized
+# original:
+#   dimensions  : 7183, 14678, 1  (nrow, ncol, nlyr)
+#   resolution  : 481.3177, 481.3177  (x, y)
+# web-optimized:
+#   dimensions  : 5888, 11776, 1  (nrow, ncol, nlyr)
+#   resolution  : 611.4962, 611.4962  (x, y)
+  
 tif_to_cogs <- function(in_tif, redo=F, upload_to_gcs=F){
   # in_tif <- d_lyrs$path_tif[1]
-  message(glue("Processing {basename(in_tif)}"))
+  # message(glue("Processing {basename(in_tif)}"))
 
   dir_out_cog <- "/Users/bbest/My Drive/projects/offhab/data/derived/lyrs_ds_sp_cog"
   
@@ -46,25 +54,27 @@ tif_to_cogs <- function(in_tif, redo=F, upload_to_gcs=F){
   rel_tif <- glue::glue("{dir_out_cog}/{lyr_key}_rel.tif")
   prs_tif <- glue::glue("{dir_out_cog}/{lyr_key}_prs.tif")
   
-  if (all(fs::file_exists(c(rel_tif, prs_tif)) & !redo)){
-    message("  SKIPPING; both rel_tif & prs_tif exist")
-    return(TRUE)
+  if (!all(fs::file_exists(c(rel_tif, prs_tif)) | redo)){
+  
+    message(glue("Processing {basename(in_tif)}"))
+    
+    # r_rel: relative env suitability
+    r_rel <- terra::rast(in_tif)
+    # dimensions  : 7183, 14678, 1  (nrow, ncol, nlyr)
+    # resolution  : 481.3177, 481.3177  (x, y)
+    if (global(r_rel, "min", na.rm=T) == 0)
+      r_rel[r_rel == 0] <- NA
+    # plet(r_rel, tiles="Esri.NatGeoWorldMap")
+    
+    # r_prs: presence
+    system.time({
+      r_prs = not.na(r_rel) |> mask(r_rel) })
+    # plet(r_prs, tiles="Esri.NatGeoWorldMap")
+    
+    # write COG raster
+    offhabr::write_rast(r_rel, rel_tif, threads=1)
+    offhabr::write_rast(r_prs, prs_tif, threads=1)
   }
-  
-  # r_rel: relative env suitability
-  r_rel <- terra::rast(in_tif)
-  if (global(r_rel, "min", na.rm=T) == 0)
-    r_rel[r_rel == 0] <- NA
-  # plet(r_rel, tiles="Esri.NatGeoWorldMap")
-  
-  # r_prs: presence
-  system.time({
-    r_prs = not.na(r_rel) |> mask(r_rel) })
-  # plet(r_prs, tiles="Esri.NatGeoWorldMap")
-  
-  # write COG raster
-  offhabr::write_rast(r_rel, rel_tif, threads=1)
-  offhabr::write_rast(r_prs, prs_tif, threads=1)
   
   if (upload_to_gcs){
     # setup
@@ -91,20 +101,20 @@ tif_to_cogs <- function(in_tif, redo=F, upload_to_gcs=F){
   TRUE
 }
 
-# load_all("~/Github/ecoquants/offhabr")
+load_all("~/Github/ecoquants/offhabr")
 # devtools::install_local("~/Github/ecoquants/offhabr", force=T)
 
-# Sys.setenv(
-#   "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
-#   "GCS_AUTH_FILE"      = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
-# gcs_auth(Sys.getenv("GCS_AUTH_FILE"))
-# gcs_global_bucket("offhab_lyrs")
-# gcs_objects <- gcs_list_objects()
+Sys.setenv(
+  "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
+  "GCS_AUTH_FILE"      = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+gcs_auth(Sys.getenv("GCS_AUTH_FILE"))
+gcs_global_bucket("offhab_lyrs")
+gcs_objects <- gcs_list_objects()
  
 cl <- new_cluster(parallel::detectCores() - 1)
 cluster_library(
   cl, c(
-    # "googleCloudStorageR", "stringr",
+    "googleCloudStorageR", "stringr",
     "dplyr", "fs", "glue", "purrr", "terra", "offhabr"))
 cluster_assign(
   cl,
@@ -115,17 +125,20 @@ dir_out_cog <- "/Users/bbest/My Drive/projects/offhab/data/derived/lyrs_ds_sp_co
 d_cl <- d_lyrs |> 
   arrange(lyr_key) |> 
   mutate(
-    # rel_obj = glue("{lyr_key}_rel.tif"),
-    # prs_obj = glue("{lyr_key}_prs.tif"),
+    rel_obj = glue("{lyr_key}_rel.tif"),
+    prs_obj = glue("{lyr_key}_prs.tif"),
     rel_tif = glue("{dir_out_cog}/{lyr_key}_rel.tif"),
-    prs_tif = glue("{dir_out_cog}/{lyr_key}_prs.tif") ) |> 
+    prs_tif = glue("{dir_out_cog}/{lyr_key}_prs.tif")
+    # rel_tif_exists = file_exists(rel_tif),
+    # prs_tif_exists = file_exists(prs_tif)
+    ) |> 
   filter(
-    # !(prs_obj %in% gcs_objects$name & rel_obj %in% gcs_objects$name)) |> 
-    !(file_exists(rel_tif) & file_exists(prs_tif))) |> 
+    !(prs_obj %in% gcs_objects$name & rel_obj %in% gcs_objects$name)) |> 
+    # !(file_exists(rel_tif) & file_exists(prs_tif))) |> 
   select(path_tif) |> 
   partition(cl) |> 
   mutate(
-    do_cog = map_lgl(path_tif, tif_to_cogs)) |> 
+    do_cog = map_lgl(path_tif, tif_to_cogs, upload_to_gcs=T)) |> 
   collect()
 ```
 
@@ -220,6 +233,9 @@ oh_zonal_stats <- function(tif, stat="mean", dir_csv, redo=F){
   if (stat == "area_km2"){
     r_a <- oh_rast("area_m2")    # plot(r)
     x <- mask(noNA(r) * r_a, r)  # plot(r)
+    # TODO: test not.na (vs noNA) since seems same and faster:
+    # x <- mask(not.na(r) * r_a, r)
+    
     fxn <- "sum"
   } else {
     x <- r
@@ -321,7 +337,7 @@ d_zs_dupes <- d_zs_d %>%
 # length(unique(d_zs_dupes$aphia_id)) # 957
 # View(d_zs_dupes)
 
-# * write to duckdb table lyr_zone_stats ----
+# * write to db table lyr_zone_stats ----
 
 con <- oh_con(read_only = F)
 # con <- oh_con()
@@ -345,45 +361,293 @@ d_lyr_zone_stats <- tbl(con, "lyr_zone_stats") |>
 
 offhabr::oh_zones_s1k |> 
   filter(zone_version == 1)
-
-
 ```
 
 
 ## Block stats, run in batches of 100
 
 ```{r}
+load_all("~/Github/ecoquants/offhabr")
+# devtools::install_local("~/Github/ecoquants/offhabr", force=T)
+
+# dir_lyrs <- "/Users/bbest/My Drive/projects/offhab/data/archive/lyrs_ds_sp_cog"
+#   DOH! these layers have wrong dimensions
+dir_lyrs <- "/Users/bbest/My Drive/projects/offhab/data/archive/_lyrs"
+rx_lyr   <- "([a-z]{2})_([0-9]+)"
+dir_zs_b <- "/Users/bbest/My Drive/projects/offhab/data/derived/zonal_stats/block_batches"
+
+dir_create(dir_zs_b)
+
+d_lyrs <- tibble(
+  path_tif    = dir_ls(dir_lyrs, glob="*.tif")) |>
+  mutate(
+    base_tif  = path_file(path_tif),
+    lyr_key   = path_ext_remove(base_tif),
+    ds_key    = str_replace(lyr_key, rx_lyr, "\\1"),
+    aphia_id  = str_replace(lyr_key, rx_lyr, "\\2"))
+
+table(d_lyrs$ds_key)
+#   am   oa   rl 
+# 9645  641  959 
+
+oh_block_stats_batch <- function(tifs, stat="mean", csv, redo=F, zone_version=1){
+  # csv   = d_cl |> filter(batchid == 1) |> pull(mean_batch_csv)
+  # state = "mean"
+  # tifs  = d_cl |> filter(batchid == 1) |> (\(x){ x$data_rel[[1]]$path_tif })()
+  # redo  = F
+  # zone_version = 1
+  
+  if (file.exists(csv) & !redo)
+    return(T)
+
+  # get raster stack
+  # browser()
+  
+  stk <- rast(tifs)
+  
+  if (stat == "area_km2"){
+    r_a <- oh_rast("area_m2")    # plot(r_a)
+    
+    x <- terra::sapp(
+      stk, 
+      \(i) not.na(i) * r_a |> terra::mask(i)) # 10 lyrs: 53.4 sec
+    
+    fxn <- "sum"
+  } else {
+    x   <- stk
+    fxn <- stat
+  }
+  
+  r_b <- offhabr::oh_rast("block_id", zone_version = zone_version)
+  # TODO: zone_version = 2 with OceanAdapt bottom trawl
+  d <- terra::zonal(x, r_b, fxn, na.rm=T)
+
+  d <- d |> 
+    tidyr::pivot_longer(
+      !block_id_v1,
+      names_to       = "lyr_key",
+      values_to      = stat,
+      values_drop_na = T)
+  if (stat == "mean"){
+    d <- d |> 
+      filter(mean > 0)
+  }
+  if (stat == "area_km2"){
+    d <- d %>% 
+      dplyr::mutate(
+        area_km2 = area_km2 / (1000*1000))
+  }
+  if (stat == "notNA"){
+    d <- d %>% 
+      filter(notNA > 0)
+  }
+  write_csv(d, csv)
+
+  return(T)
+}
+
+cl <- new_cluster(parallel::detectCores() - 1)
+cluster_library(
+  cl, c(
+    "dplyr", "fs", "glue", "purrr", "readr", "terra", "tidyr", "offhabr"))
+cluster_assign(
+  cl, 
+  oh_block_stats_batch = oh_block_stats_batch)
+
+n_batch <- 100
+d_cl <- d_lyrs |> 
+  arrange(aphia_id) |> 
+  # select(-rowid) %>% 
+  rowid_to_column("rowid") |> 
+  mutate(
+    batchid = rowid %/% n_batch + 1) |> 
+  # filter(batchid > 9) |> 
+  select(batchid, rowid, path_tif) |> 
+  group_by(batchid) |> 
+  nest(
+    data = c(rowid, path_tif)) |> 
+  mutate(
+    mean_batch_csv = map_chr(
+      data,
+      \(x){
+        glue::glue(
+        "{dir_zs_b}/block_batch{paste(range(x$rowid), collapse='-')}_mean.csv")
+        }))
+    # TODO: area_km2 -- skipping for now b/c time consuming and mostly same as block size if lyr present
+    # area_km2_batch_csv = map_chr(
+    #   data_prs,
+    #   \(x){
+    #     glue::glue(
+    #     "{dir_zs_b}/block_batch{paste(range(x$rowid), collapse='-')}_area_km2.csv")
+    #     })) # |> 
+
+d_cl2 <- d_cl |> 
+  filter(batchid >= 3) |> 
+  partition(cl) |> 
+  mutate(
+    do_mean     = map2_lgl(
+      data, mean_batch_csv,
+      \(d, csv) oh_block_stats_batch(d$path_tif, stat="mean", csv=csv) ) )
+  # TODO: area_km2
+  # do_area_km2 = map2(
+  #   data_prs, area_km2_batch_csv, 
+  #   \(d, csv) oh_block_stats(d$prs, stat="area_km2", csv=csv) ))
+  # |> 
+  # collect()
+
+
+d_lyrs <- d_lyrs %>% 
+  arrange(aphia_id) %>% 
+  select(-rowid) %>% 
+  rowid_to_column("rowid") %>% 
+  mutate(
+    batchid = rowid %/% n_batch + 1)
+i_beg <- min(d_lyrs$batchid) 
+i_end <- max(d_lyrs$batchid)
+pb <- progress_bar$new(
+  format = "  zone stats [:bar] :current/:total (:percent) in :elapsed; eta: :eta",
+  total = i_end - i_beg + 1, clear = FALSE, width=60)
+for (b in unique(d_lyrs$batchid)){  # b = 1
+  pb$tick()
+  
+  for (stat in c("mean")){
+     b <- d_lyrs |> 
+      filter(batchid == b)
+
+    csv <- glue::glue(
+      "{dir_zs}/block_batch{paste(range(d_lyrs_b$rowid), collapse='-')}_{stat}.csv")
+    
+    oh_block_stats(d_lyrs_b$path_tif, stat=stat, csv, redo=F)
+  }
+}
+
+# collapse zonal stats (zs) CSVs into tibble ----
+options(readr.show_col_types = FALSE)
+rx_zs <- "([a-z]{2})_([0-9]+)_(mean|notNA|area_km2)"
+d_zs <- dir_info(dir_zs, glob = "*.csv") %>%
+  mutate(
+    lyr_key   = path_file(path) |> path_ext_remove(),
+    ds_key    = str_replace(lyr_key, rx_zs, "\\1"),
+    aphia_id  = str_replace(lyr_key, rx_zs, "\\2") %>%
+      as.integer(),
+    stat      = str_replace(lyr_key, rx_zs, "\\3"))
+d_zs <- d_zs %>% 
+  mutate(
+    data = map(path, read_csv))
+
+d_zs_d <- d_zs %>% 
+  select(data) %>% 
+  mutate(
+    nrow = map_int(data, nrow)) %>% 
+  filter(nrow > 0) %>% 
+  select(-nrow) %>% 
+  unnest(data) %>% 
+  pivot_longer(
+    !any_of(c("zone_id", "lyr_key")),
+    names_to  = "stat",
+    values_to = "val") %>% 
+  filter(!is.na(val)) %>% 
+  pivot_wider(
+    names_from = stat,
+    values_from = val) %>%
+  mutate(
+    ds_key    = str_replace(lyr_key, "([a-z]{2})_([0-9]+)", "\\1"),
+    aphia_id  = str_replace(lyr_key, "([a-z]{2})_([0-9]+)", "\\2") |>
+      as.integer()) %>% 
+  relocate(lyr_key, ds_key, aphia_id, zone_id) # unique by lyr_key, zone_id
+nrow(d_zs_d) # 55,891
+length(unique(d_zs_d$aphia_id)) # 9,953
+
+# sum(duplicated(d_zs_d$aphia_id)) # 45,938
+# lyr_zonestats  [reduce to single]-> spp_zonestats
+# lyr_blockstats [reduce to single]-> spp_blockstats
+
+d_zs_dupes <- d_zs_d %>% 
+  semi_join(
+    d_zs_d %>% 
+  select(aphia_id, zone_id) %>% 
+  filter(duplicated(.)),
+  by = c("aphia_id", "zone_id")) %>% 
+  arrange(aphia_id, zone_id, ds_key) %>% 
+  select(aphia_id, zone_id, ds_key, notNA) %>% 
+  pivot_wider(
+    names_from = ds_key,
+    values_from = notNA)
+# 3,608 × 5
+# length(unique(d_zs_dupes$aphia_id)) # 957
+# View(d_zs_dupes)
+
+# * write to db table lyr_zone_stats ----
+
+con <- oh_con(read_only = F)
+# con <- oh_con()
+# dbListTables(con)
+# dbRemoveTable(con, "lyr_zonestats")
+
+dbWriteTable(con, "lyr_zone_stats", d_zs_d)
+dbSendStatement(
+  con,
+  "CREATE UNIQUE INDEX lyr_zone_stats_idx ON lyr_zone_stats (lyr_key, zone_id)")
+dbDisconnect(con, shutdown=T)
+
+```
+
+
+## Block stats, individual extract
+
+```{r}
 # load_all("~/Github/ecoquants/offhabr")
 # devtools::install_local("~/Github/ecoquants/offhabr", force=T)
 r_b_v1 <- oh_rast("block_id", zone_version = 1)
 
-oh_block_stats <- function(tifs, stat="mean", csv, redo=F){
-  # tifs    = d_lyrs %>% slice(1:5) %>% pull(path_tif)
+dir_zs_b <- "/Users/bbest/My Drive/projects/offhab/data/derived/zonal_stats"
+dir_lyrs <- "/Users/bbest/My Drive/projects/offhab/data/archive/_lyrs"
+
+rx_lyr <- "([a-z]{2})_([0-9]+)"
+d_lyrs <- tibble(
+  path_tif    = dir_ls(dir_lyrs, glob="*.tif")) %>%
+  mutate(
+    lyr_key   = path_ext_remove(path_file(path_tif)),
+    ds_key    = str_replace(lyr_key, rx_lyr, "\\1"),
+    aphia_id  = str_replace(lyr_key, rx_lyr, "\\2"))
+
+table(d_lyrs$ds_key)
+#   am   oa   rl 
+# 9645  641  959 
+
+oh_block_stats_indiv <- function(tif, stat="mean", csv, redo=F){
+  # tifs    = d_cl |> filter(batchid == 1) |> (\(x){ x$data_rel[[1]]$path_tif })()
   # stat    = "mean"
-  # dir_csv = dir_zs
+  # rowid_range   = d_cl |> filter(batchid == 1) |> (\(x){ range(x$data_rel[[1]]$rowid) })()
+  # csv = glue::glue("{dir_zs_b}/block_batch1-99_mean.csv")
   # redo    = F
+  
   
   if (file.exists(csv) & !redo)
     return(T)
 
   # get raster stack
   stk <- rast(tifs)
-  
-  r_b <- offhabr::oh_rast("block_id")
+
   # TODO: zone_version = 2
   
   if (stat == "area_km2"){
     r_a <- oh_rast("area_m2")    # plot(r_a)
+    
     x <- terra::sapp(
       stk, 
-      \(i) noNA(i) * r_a |> terra::mask(i))
+      \(i) not.na(i) * r_a |> terra::mask(i))
+    
     fxn <- "sum"
   } else {
     x <- stk
     fxn <- stat
   }
   
+  r_b <- offhabr::oh_rast("block_id") # plot(r_b)
+  
   d <- terra::zonal(x, r_b, fxn, na.rm=T)
+
   # d_0 <- d
   d <- d |> 
     tidyr::pivot_longer(
@@ -391,6 +655,7 @@ oh_block_stats <- function(tifs, stat="mean", csv, redo=F){
       names_to       = "lyr_key",
       values_to      = stat,
       values_drop_na = T)
+  
   if (stat == "area_km2"){
     d <- d %>% 
       dplyr::mutate(
@@ -412,7 +677,7 @@ cluster_library(
 cluster_assign(
   cl, 
   oh_block_stats = oh_block_stats,
-  dir_zs         = dir_zs)
+  dir_zs_b         = dir_zs_b)
 
 n_batch <- 100
 d_cl <- d_lyrs |> 
@@ -421,23 +686,40 @@ d_cl <- d_lyrs |>
   rowid_to_column("rowid") |> 
   mutate(
     batchid = rowid %/% n_batch + 1) |> 
-  filter(batchid > 9) |> 
+  # filter(batchid > 9) |> 
+  # select(batchid, rowid, prs, rel) |> 
   select(batchid, rowid, path_tif) |> 
   group_by(batchid) |> 
-  nest() |> 
+  nest(
+    # data_prs = c(rowid, prs),
+    # data_rel = c(rowid, rel)) |> 
+    data_rel = c(rowid, path_tif)) |> 
   mutate(
     mean_batch_csv = map_chr(
-      data,
+      data_rel,
       \(x){
         glue::glue(
-        "{dir_zs}/block_batch{paste(range(x$rowid), collapse='-')}_mean.csv")
-        })) |> 
-  partition(cl) |> 
+        "{dir_zs_b}/block_batch{paste(range(x$rowid), collapse='-')}_mean.csv")
+        })) #,
+    # TODO: area_km2 -- skipping for now b/c time consuming and mostly same as block size if lyr present
+    # area_km2_batch_csv = map_chr(
+    #   data_prs,
+    #   \(x){
+    #     glue::glue(
+    #     "{dir_zs_b}/block_batch{paste(range(x$rowid), collapse='-')}_area_km2.csv")
+    #     })) # |> 
+  # partition(cl) |> 
+d_cl2 <- d_cl |> 
   mutate(
     do_mean     = map2_lgl(
-      data, mean_batch_csv, 
-      \(d, csv) oh_block_stats(d$path_tif, stat="mean", csv=csv))) %>% 
-  collect()
+      data_rel, mean_batch_csv,
+      \(d, csv) oh_block_stats(d$rel, stat="mean", csv=csv)))
+    # TODO: area_km2 -- skipping for now b/c time consuming and mostly
+    # do_area_km2 = map2(
+    #   data_prs, area_km2_batch_csv, 
+    #   \(d, csv) oh_block_stats(d$prs, stat="area_km2", csv=csv) ))
+# |> 
+# collect()
 
 
 d_lyrs <- d_lyrs %>% 
@@ -455,18 +737,89 @@ for (b in unique(d_lyrs$batchid)){  # b = 1
   pb$tick()
   
   for (stat in c("mean")){
-    d_lyrs_b <- d_lyrs |> 
+     <- b <- d_lyrs |> 
       filter(batchid == b)
 
     csv <- glue::glue(
-      "{dir_zs}/block_batch{paste(range(d_lyrs_b$rowid), collapse='-')}_{stat}.csv")
+      "{dir_zs_b}/block_batch{paste(range(d_lyrs_b$rowid), collapse='-')}_{stat}.csv")
     
     oh_block_stats(d_lyrs_b$path_tif, stat=stat, csv, redo=F)
   }
 }
 
+# collapse zonal stats (zs) CSVs into tibble ----
+options(readr.show_col_types = FALSE)
+rx_zs <- "([a-z]{2})_([0-9]+)_(mean|notNA|area_km2)"
+d_zs <- dir_info(dir_zs_b, glob = "*.csv") %>%
+  mutate(
+    lyr_key   = path_file(path) |> path_ext_remove(),
+    ds_key    = str_replace(lyr_key, rx_zs, "\\1"),
+    aphia_id  = str_replace(lyr_key, rx_zs, "\\2") %>%
+      as.integer(),
+    stat      = str_replace(lyr_key, rx_zs, "\\3"))
+d_zs <- d_zs %>% 
+  mutate(
+    data = map(path, read_csv))
+
+d_zs_d <- d_zs %>% 
+  select(data) %>% 
+  mutate(
+    nrow = map_int(data, nrow)) %>% 
+  filter(nrow > 0) %>% 
+  select(-nrow) %>% 
+  unnest(data) %>% 
+  pivot_longer(
+    !any_of(c("zone_id", "lyr_key")),
+    names_to  = "stat",
+    values_to = "val") %>% 
+  filter(!is.na(val)) %>% 
+  pivot_wider(
+    names_from = stat,
+    values_from = val) %>%
+  mutate(
+    ds_key    = str_replace(lyr_key, "([a-z]{2})_([0-9]+)", "\\1"),
+    aphia_id  = str_replace(lyr_key, "([a-z]{2})_([0-9]+)", "\\2") |>
+      as.integer()) %>% 
+  relocate(lyr_key, ds_key, aphia_id, zone_id) # unique by lyr_key, zone_id
+nrow(d_zs_d) # 55,891
+length(unique(d_zs_d$aphia_id)) # 9,953
+
+# sum(duplicated(d_zs_d$aphia_id)) # 45,938
+# lyr_zonestats  [reduce to single]-> spp_zonestats
+# lyr_blockstats [reduce to single]-> spp_blockstats
+
+d_zs_dupes <- d_zs_d %>% 
+  semi_join(
+    d_zs_d %>% 
+  select(aphia_id, zone_id) %>% 
+  filter(duplicated(.)),
+  by = c("aphia_id", "zone_id")) %>% 
+  arrange(aphia_id, zone_id, ds_key) %>% 
+  select(aphia_id, zone_id, ds_key, notNA) %>% 
+  pivot_wider(
+    names_from = ds_key,
+    values_from = notNA)
+# 3,608 × 5
+# length(unique(d_zs_dupes$aphia_id)) # 957
+# View(d_zs_dupes)
+
+# * write to db table lyr_zone_stats ----
+
+con <- oh_con(read_only = F)
+# con <- oh_con()
+# dbListTables(con)
+# dbRemoveTable(con, "lyr_zonestats")
+
+dbWriteTable(con, "lyr_zone_stats", d_zs_d)
+dbSendStatement(
+  con,
+  "CREATE UNIQUE INDEX lyr_zone_stats_idx ON lyr_zone_stats (lyr_key, zone_id)")
+dbDisconnect(con, shutdown=T)
+
 ```
 
+
+## OLD
 
 ### All layers, run in batches of 100
 

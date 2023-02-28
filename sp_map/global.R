@@ -1,12 +1,14 @@
 librarian::shelf(
   dplyr, fs, googleCloudStorageR, glue, here, leaflet, offhabr, readr, sf, shiny, stringr, tidyr)
-redo_gcs_csv <- F
+# devtools::install_local("/share/github/ecoquants/offhabr", force = T)
 options(readr.show_col_types = F)
 
+redo_gcs_csv <- F
 gcs_csv <- here("data/sp-map_cog-tif.csv")
-spp_csv <- here("data/taxa_wm.csv")
 
-d_spp <- read_csv(spp_csv)
+con <- oh_con()
+
+d_spp <- tbl(con, "taxa_wm") |> collect()
 
 # google cloud storage
 if (!file.exists(gcs_csv) | redo_gcs_csv){
@@ -36,5 +38,13 @@ d_gcs_spp <- read_csv(gcs_csv) |>
   left_join(
     d_spp, by = "aphia_id") |>
   arrange(scientificname)
+
+# add test layers
+d_gcs_spp <- tribble(
+  ~gcs_tif              , ~scientificname,
+  "aphia_100599.tif"    , "aphia_100599",
+  "aphia_100599_web.tif", "aphia_100599_web") |>
+  bind_rows(
+    d_gcs_spp)
 
 bb <- st_bbox(oh_zones_s1k) |> as.vector()

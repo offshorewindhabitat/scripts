@@ -1,7 +1,7 @@
 # bbest@Benjamins-MacBook-Air ~ % /opt/homebrew/bin/python3
 
 # which pip  # /opt/homebrew/bin/pip
-# pip install earthengine-api --upgrade
+# pip3 install earthengine-api --upgrade
 import ee
 from google.auth.transport.requests import AuthorizedSession
 
@@ -12,6 +12,10 @@ session = AuthorizedSession(ee.data.get_persistent_credentials())
 
 ee.Initialize()
 print(ee.Image("NASA/NASADEM_HGT/001").get("title").getInfo())
+
+
+
+# old
 
 import json
 from pprint import pprint

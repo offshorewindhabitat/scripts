@@ -1,0 +1,193 @@
+---
+title: "equation"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+
+$$
+rescale(x) = [x - min(x)] / [max(x) - min(x)] \\
+\\
+Score_{raw} = w_{SR} * rescale(SpeciesRichness) \\
++ w_{SA} * rescale(SpeciesAbundance) \\
++ w_{ER} * rescale(ExtinctionRisk) \\
++ w_{PP} * rescale(PrimaryProductivity) \\
++ w_{HV} * rescale(HydrothermalVents) \\
++ w_{SM} * rescale(Seamounts) \\
+Score = rescale(Score_{raw}) * 100
+$$
+```{r pkgs & db con}
+library(librarian)
+shelf(
+  DBI, devtools, dplyr, fs, glue, here, readr, scales, terra)
+load_all("../offhabr")
+
+con <- oh_con(read_only = F) # dbDisconnect(con, shutdown = T)
+# dbListTables(con)
+```
+
+```{r get non-aphia lyrs}
+dir_derived <- "/Users/bbest/My Drive/projects/offhab/data/derived"
+dir_raw     <- "/Users/bbest/My Drive/projects/offhab/data/raw"
+
+d_lyrs <- tbl(con, "lyrs") |> 
+  filter(
+    is_ds_prime,
+    is.na(aphia_id)) |> 
+  collect()
+# View(d_lyrs)
+
+if ("nc" %in% d_lyrs$lyr_key){
+  r_nc <- d_lyrs |> 
+    filter(lyr_key == "nc") |> 
+    pull(path_tif) |> 
+    rast() |> 
+    trim()
+  # plot(r_nc)
+  # plet(r_nc), providers$Esri.OceanBasemap)
+  
+  dbExecute(con, "DELETE FROM lyrs WHERE lyr_key == 'nc'")
+}
+```
+
+
+```{r prep lyrs}
+# paths ----
+lyr_pfxs     <- c("sa", "sp", "er", "vg", "ve", "sm")
+lyr_web_tifs <- setNames(
+  glue("{dir_derived}/{lyr_pfxs}_web.tif"), lyr_pfxs)
+lyr_score_v1_web_tif <- glue("{dir_derived}/score_v1_web.tif")
+
+# weights ----
+w <- list(
+  sa = 1,
+  sp = 1,
+  er = 1,
+  vg = 1,
+  ve = 1,
+  sm = 1)
+
+# read layers into raster stack, create rasters if missing ----
+stk <- list()
+for (lyr_pfx in lyr_pfxs){ # lyr_pfx = lyr_pfxs[3] # lyr_pfx = "er"
+  
+  lyr_web_tif <- lyr_web_tifs[lyr_pfx]
+  
+  if (!file.exists(lyr_web_tif)){
+    message(glue("Creating: {basename(lyr_web_tif)}"))
+    
+    lyr_tif <- switch(
+      lyr_pfx,
+      er = glue("{dir_derived}/er.tif"),
+      vg = glue("{dir_raw}/oregonstate.edu - productivity/vgpm.m.2021/vgpm_2021_oh.tif"),
+      d_lyrs |> 
+        filter(lyr_key == lyr_pfx) |> 
+        pull(path_tif) |> as.character())
+    message(glue("  lyr_tif: {basename(lyr_tif)}"))
+    
+    r_lyr <- rast(lyr_tif)
+    # dimensions  : 7183, 14678, 1  (nrow, ncol, nlyr)
+    # resolution  : 481.3177, 481.3177  (x, y)
+    # extent      : -14378304, -7313523, 2733139, 6190444
+    (rng_lyr <- range(values(r_lyr, na.rm=T))) # er: 150 to 22,585
+    message(glue("  range: {paste(rng_lyr, collapse = ',')}"))
+
+    write_rast(
+      r_lyr, lyr_web_tif,
+      web_optimize = T)
+
+    r_lyr_web <- rast(lyr_web_tif)
+    # dimensions  : 5888, 11776, 1  (nrow, ncol, nlyr)
+    # resolution  : 611.4962, 611.4962  (x, y)
+    # extent      : -14401959, -7200980, 2661232, 6261721
+    if (lyr_pfx != "sa")
+      stopifnot(compareGeom(r_lyr_web, stk[["sa"]]))
+  }
+  stk[[lyr_pfx]] <- rast(lyr_web_tif)
+}
+stk <- rast(stk)
+
+# calculate score ----
+# names(stk)
+# "sa" "sp" "er" "vg" "ve" "sm"
+
+sc <- function(x){
+  terra::setValues(x, scales::rescale(values(x)))
+}
+r_sa   <- sc(stk["sa"])
+r_sp   <- sc(stk["sp"])
+r_er   <- sc(stk["er"])
+r_vg   <- sc(stk["vg"])
+r_ve   <- sc(stk["ve"]) # HydrothermalVents: binary converts to 0.5
+r_sm   <- sc(stk["sm"]) # Seamounts:         binary converts to 0.5
+
+# score_v1: all weights == 1
+r_score_v1 <- sc(sum(r_sa, r_sp, r_er, r_vg, r_ve, r_sm, na.rm = T)) * 100 |> as.int()
+# plet(r_score_v1, tiles=providers$CartoDB.Positron)
+write_rast(
+  r_score_v1,
+  lyr_score_v1_web_tif,
+  use_gdal_cog = T)
+
+# write rescaled input lyrs for evaluating contribution of each per pixel ----
+
+for (lyr_pfx in lyr_pfxs){ # lyr_pfx = lyr_pfxs[1]
+  r   <- get(glue("r_{lyr_pfx}"))
+  tif <- glue("{dir_derived}/{lyr_pfx}_web_rescaled.tif")
+  r <- (r * 100) |> as.int()
+  write_rast(r, tif, use_gdal_cog = T)
+}
+lyr_web_rescaled_tifs <- setNames(
+  glue("{dir_derived}/{lyr_pfxs}_web_rescaled.tif"), lyr_pfxs)
+
+
+# upload to gcs ----
+tifs_for_gcs <- c(
+  lyr_web_tifs, lyr_score_v1_web_tif, lyr_web_rescaled_tifs)
+overwrite_gcs = F
+
+# setup GCS
+Sys.setenv(
+  "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
+  "GCS_AUTH_FILE"      = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+library(googleCloudStorageR)
+
+if (!overwrite_gcs){
+  gcs_objects <- gcs_list_objects()
+
+  gcs_missing <- setdiff(basename(tifs_for_gcs), gcs_objects$name)
+  tifs_for_gcs <- glue("{dir_derived}/{gcs_missing}")
+}
+sapply(tifs_for_gcs, upload_to_gcs)
+```
+
+```{r get zonal stats on all lyrs for blocks, zones, regions, study}
+web_tifs <- fs::dir_ls(dir_derived, glob="*web*.tif")
+s_web <- rast(web_tifs)
+names(s_web) <- basename(web_tifs) |> path_ext_remove()
+
+r_b <- oh_rast(type = "block_id", zone_version = 1, web_version = T)
+d_b <- zonal(
+  s_web,
+  r_b) |> 
+  tibble()
+write_csv(d_b, here("data/zonal_blocks.csv"))
+
+r_z <- oh_rast(type = "zone_id", zone_version = 1, web_version = T)
+d_z <- zonal(
+  s_web,
+  r_z) |> 
+  tibble()
+write_csv(d_z, here("data/zonal_zones.csv"))
+
+r_r <- oh_rast(type = "region", zone_version = 1, web_version = T)
+d_r <- zonal(
+  s_web,
+  r_r) |> 
+  tibble()
+write_csv(d_r, here("data/zonal_regions.csv"))
+
+```
+
+

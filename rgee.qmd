@@ -305,7 +305,7 @@ ic_taxa <- ee$ImageCollection(ic_taxa_id)
 
 # get count
 count <- ic_taxa$size()
-message(glue("Count: ", count$getInfo())) # 11,242
+message(glue("Count: ", ic_taxa$size()$getInfo())) # 11,242
 
 # as tidyee
 d_eetaxa <- as_tidyee(ic_taxa)

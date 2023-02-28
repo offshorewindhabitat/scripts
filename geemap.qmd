@@ -21,9 +21,17 @@ docker run -it --name geemap -p 8888:8888 -p 6006:6006 -v '/Users/bbest/My Drive
 # WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
 ```
 
+If kicked off from Docker app, then enter container with:
+
+```bash
+docker exec -it geemap bash
+```
+
 Now inside VM prompt like `root@71129cbd804f:/geemap`:
 
 ```bash
+docker exec -it geemap bash
+
 jupyter notebook --ip=0.0.0.0 --port=8888 --allow-root
 ```
 

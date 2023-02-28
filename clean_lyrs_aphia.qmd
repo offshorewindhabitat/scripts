@@ -1,0 +1,445 @@
+---
+title: "clean_lyrs_aphia"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r pkgs}
+library(librarian)
+shelf(
+  DBI, devtools, dplyr, fs, glue, here, terra)
+load_all("../offhabr")
+```
+
+```{r get prime lyrs}
+con <- oh_con() # dbDisconnect(shutdown = T)
+# dbListTables(con)
+
+dir_derived    <- "/Users/bbest/My Drive/projects/offhab/data/derived"
+
+d_lyrs <- tbl(con, "lyrs") |> 
+  filter(is_ds_prime) |> 
+  collect() |> 
+  mutate(
+    lyr_key = ifelse(
+      is.na(aphia_id), 
+      lyr_key,
+      glue("aphia_{aphia_id}")),
+    aphia_tif  = glue(
+      "{dir_derived}/lyrs_aphia/aphia_{aphia_id}.tif"),
+    aphia_web_tif  = glue(
+      "{dir_derived}/lyrs_aphia/aphia_{aphia_id}_web.tif"))
+
+stopifnot(
+  d_lyrs |> filter(!is.na(aphia_id)) |> 
+    filter(duplicated(aphia_id)) |> nrow() == 0)
+```
+
+```{r test 1 lyr for normal and web-optimized}
+#| eval: false
+
+i <- 1L
+di <- d_lyrs |> 
+  slice(i)
+
+r <- rast(di$path_tif)
+write_rast(r, di$aphia_tif, web_optimize = F)
+# rast(di$aphia_tif)
+
+r <- rast(di$aphia_tif)  # plet(r, tiles = 'Esri.NatGeoWorldMap')
+write_rast(r, di$aphia_web_tif, web_optimize = T)
+
+r
+# dimensions  : 7183, 14678, 1  (nrow, ncol, nlyr)
+# resolution  : 481.3177, 481.3177  (x, y)
+rast(di$aphia_web_tif)
+# dimensions  : 5888, 11776, 1  (nrow, ncol, nlyr)
+# resolution  : 611.4962, 611.4962  (x, y)
+```
+
+
+```{r gcs upload test lyrs}
+#| eval: false
+
+load_all("../offhabr")
+upload_to_gcs(di$aphia_tif)
+upload_to_gcs(di$aphia_web_tif)
+```
+
+## test in shiny app
+
+Tried in [shiny.offshorewindhabitat.info/sp_map](https://shiny.offshorewindhabitat.info/sp_map) per commit [add test layers · ecoquants/offhab-scripts@3ca9be3](https://github.com/ecoquants/offhab-scripts/commit/3ca9be34f90272727a5c0235e98695c660df367f#diff-c82b600577d18c841f39ac60f5666e03e94b9c6df9636fb462976ea36412ca36R44-R46). Result:
+
+- `aphia_100599.tif` dropped tiles significantly more than `aphia_100599_web.tif`
+- conclusion: use `web-optimize=T` with `write_rast()`
+
+```{r test gcs_to_gee for 2 lyrs}
+#| eval: false
+
+# add another test layer
+i <- 2L
+di <- d_lyrs |> 
+  slice(i)
+di$aphia_id # 100832
+r <- rast(di$path_tif)  # plet(r, tiles = 'Esri.NatGeoWorldMap')
+write_rast(r, di$aphia_web_tif, web_optimize = T)
+upload_to_gcs(di$aphia_web_tif)
+
+load_all("../offhabr")
+
+gcs_to_gee(
+  basename(di$aphia_web_tif),
+  properties = list(
+    lyr_key  = di$lyr_key,
+    ds_key   = di$ds_key,
+    aphia_id = di$aphia_id))
+
+i <- 1L
+di <- d_lyrs |> 
+  slice(i)
+di$aphia_id # 100599
+
+gcs_to_gee(
+  basename(di$aphia_web_tif),
+  properties = list(
+    lyr_key  = di$lyr_key,
+    ds_key   = di$ds_key,
+    aphia_id = di$aphia_id))
+```
+
+
+```{r convert all layers to web-optimized aphia_#.tif and upload to gcs}
+# shelf(multidplyr)
+# devtools::install_local("../offhabr", force = T)
+
+message(glue("nrow(d_lyrs): {nrow(d_lyrs)}")) # 10,062
+
+tif_to_gee <- function(
+    path_tif, aphia_web_tif, lyr_key, ds_key, aphia_id){
+  
+  if (!file.exists(aphia_web_tif)){
+    message(glue("!tif: {basename(aphia_web_tif)}"))
+    r <- terra::rast(path_tif)
+    offhabr::write_rast(r, aphia_web_tif, web_optimize = T)
+  }
+  
+  aphia_gcs <- basename(aphia_web_tif)
+  if (!aphia_gcs %in% gcs_objects$name){
+    message(glue("!gcs: {aphia_gcs}"))
+    offhabr::upload_to_gcs(aphia_web_tif)
+  }
+  
+  aphia_gee <- fs::path_ext_remove(basename(aphia_web_tif))
+  if (!aphia_gee %in% basename(ic_aphia_ids)){
+    message(glue("!gee: {aphia_gee}"))
+    offhabr::gcs_to_gee(
+      basename(aphia_web_tif),
+      properties = list(
+        lyr_key  = lyr_key,
+        ds_key   = ds_key,
+        aphia_id = aphia_id))
+  }
+  return(T)
+}
+
+# get objects in GCS
+Sys.setenv(
+  "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
+  "GCS_AUTH_FILE"      = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+library(googleCloudStorageR)
+gcs_objects <- gcs_list_objects()
+message(glue("nrow(gcs_objects): {nrow(gcs_objects)}")) # 42,914
+
+# get images in ImageCollection
+librarian::shelf(rgee)
+ee_Initialize(quiet = T)
+ic_aphia <- ee$ImageCollection("projects/ee-offhab/assets/lyrs_aphia_web")
+ic_aphia_ids <- ic_aphia$aggregate_array("system:id")$getInfo()
+gee_lyr_cnt <- length(ic_aphia_ids)
+message(glue("gee_lyr_cnt: {gee_lyr_cnt}")) # 10,061
+# count <- ic_aphia$size()$getInfo()
+# message(glue("Count: ", count)) # 10,061
+
+# setdiff(glue("{d_lyrs$lyr_key}_web"), basename(ic_aphia_ids))
+# nc_web
+
+# setup cluster to parallelize ----
+# cl <- new_cluster(parallel::detectCores() - 1) # eg my MacBook Air has 8 CPUs, so 7 cores used
+# cluster_library(
+#   cl, c(
+#     "dplyr", "fs", "glue", "offhabr", "purrr", "terra"))
+# cluster_assign(
+#   cl,
+#   tif_to_gee   = tif_to_gee,
+#   gcs_objects  = gcs_objects,
+#   ic_aphia_ids = ic_aphia_ids)
+
+d_lyrs2 <- d_lyrs %>%
+  filter(
+    !is.na(aphia_id)) |> 
+  # slice(gee_lyr_cnt:nrow(d_lyrs)) |> 
+  # partition(cl) %>%
+  mutate(
+    gee = pmap_lgl(
+      list(path_tif, aphia_web_tif, lyr_key, ds_key, aphia_id),
+      tif_to_gee)) # %>% 
+  # collect()
+```
+
+```{r get spp abundance results}
+librarian::shelf(
+  sf)
+
+r <- rast(d_lyrs$aphia_web_tif[1])
+r
+
+# TODO: add trimmed extents of all lyrs to duckdb (+ range of values) for mapping
+ext(r) |> 
+  st_bbox() |> 
+  st_as_sfc() |> 
+  st_set_crs(3857) |> 
+  st_transform(4326) |> 
+  st_bbox() |>
+  as.numeric() |> 
+  round(1)
+# -129.4   23.2  -64.7   48.9
+
+# save GEE to Gdrive, download
+r_tif <- "/Users/bbest/Downloads/species-abundance.tif"
+r <- rast(r_tif)
+# plot(r)
+trim(r) |> plet(tiles="Esri.NatGeoWorldMap")
+
+# save to gcs: 9 files (21 to 48 MB)
+# Export_im_aphia_sa_dbl  1h
+# ID: AL2PDOCQD5XJQ4Z2EYO4YW6K
+# Phase: Completed
+# Runtime: 1h (started 2023-02-17 16:05:39 -0800)
+# Attempted 1 time
+# Batch compute usage: 86241.9219 EECU-seconds
+
+r_url <- "https://storage.googleapis.com/offhab_lyrs/Export_im_aphia_sa_dbl0000000000-0000000000.tif"
+r_g1 <- rast(r_url)
+r_g1
+trim(r_g1) |> plet(tiles="Esri.NatGeoWorldMap")
+ext(r) |>
+st_bbox() |>
+st_as_sfc() |>
+st_set_crs(3857) |>
+st_transform(4326) |>
+st_bbox() |>
+as.numeric() |>
+round(1)
+r <- rast(d_lyrs$aphia_web_tif[1])
+ext(r) |>
+st_bbox() |>
+st_as_sfc() |>
+st_set_crs(3857) |>
+st_transform(4326) |>
+st_bbox() |>
+as.numeric() |>
+round(1)
+```
+
+## Process species abundance from GEE
+
+```bash
+cd /Users/bbest/My\ Drive/projects/offhab/data/derived/sa_gee
+
+gsutil -m cp \
+  "gs://offhab_lyrs/Export_im_aphia_sa_dbl0000000000-0000000000.tif" \
+  "gs://offhab_lyrs/Export_im_aphia_sa_dbl0000000000-0000023296.tif" \
+  "gs://offhab_lyrs/Export_im_aphia_sa_dbl0000000000-0000046592.tif" \
+  "gs://offhab_lyrs/Export_im_aphia_sa_dbl0000023296-0000000000.tif" \
+  "gs://offhab_lyrs/Export_im_aphia_sa_dbl0000023296-0000023296.tif" \
+  "gs://offhab_lyrs/Export_im_aphia_sa_dbl0000023296-0000046592.tif" \
+  "gs://offhab_lyrs/Export_im_aphia_sa_dbl0000046592-0000000000.tif" \
+  "gs://offhab_lyrs/Export_im_aphia_sa_dbl0000046592-0000023296.tif" \
+  "gs://offhab_lyrs/Export_im_aphia_sa_dbl0000046592-0000046592.tif" \
+  .
+```
+
+```{r upload zones_web to gcs & gee}
+gcs_auth_json = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json"
+gcs_bucket = "offhab_lyrs"
+stopifnot(file.exists(gcs_auth_json))
+Sys.setenv(
+  "GCS_DEFAULT_BUCKET" = gcs_bucket,
+  "GCS_AUTH_FILE"      = gcs_auth_json)
+library(googleCloudStorageR)
+
+r_rgns_web <- offhabr::oh_rast(
+  "region", web_version=T) # plot(r_rgns_web)
+r_zones_v1_web <- offhabr::oh_rast(
+  "zone_id", zone_version = 1, web_version=T) 
+  # plot(r_zones_v1_web)
+
+dir_inst <- "/Users/bbest/Github/ecoquants/offhabr/inst"
+oh_zones_v1_web_tif <- glue("{dir_inst}/oh_zones_v1_web.tif")
+stopifnot(file.exists(oh_zones_v1_web_tif))
+upload_to_gcs(oh_zones_v1_web_tif)
+gcs_to_gee(
+  basename(oh_zones_v1_web_tif),
+  properties = list(
+    lyr_key  = basename(oh_zones_v1_web_tif),
+    ds_key   = "sf" )) # spatial features
+    
+# download sp_web.tif from GCS
+sp_web0_tif <- glue("{dir_derived}/sp_web_0.tif")
+sp_web_tif <- glue("{dir_derived}/sp_web.tif")
+sp_web_gcs <- "gs://offhab_lyrs/aphia_presence_web.tif"
+gcs_update_object_acl(
+  basename(sp_web_gcs), entity_type = "allUsers")
+gcs_get_object(sp_web_gcs, saveToDisk = sp_web0_tif, overwrite=T)
+
+r_sp_web   <- rast(sp_web0_tif)
+rng_sp_web # 30  6,137
+r_sp_web <- r_sp_web |> 
+  mask(r_rgns_web) |> 
+  as.int()
+names(r_sp_web) <- "aphia_presence"
+# dimensions  : 5888, 11776, 1  (nrow, ncol, nlyr)
+# resolution  : 611.4962, 611.4962  (x, y)
+# extent      : -14401959, -7200980, 2661232, 6261721
+write_rast(
+  r_sp_web,
+  sp_web_tif,
+  datatype = "INT2U",
+  use_gdal_cog = T)
+
+plet(r_sp_web, tiles=providers$Esri.NatGeoWorldMap)
+
+upload_to_gcs(sp_web_tif)
+
+oh_map_cog(
+  cog_file  = basename(sp_web_tif),
+  cog_range = rng_sp_web,
+  title     = "Presence")
+```
+
+
+```{r process species abundance & presence gee exported to gcs}
+devtools::load_all("../offhabr")
+
+# paths
+sa_web0_tif <- glue("{dir_derived}/sa_web_0.tif")
+sa_web_tif  <- glue("{dir_derived}/sa_web.tif")
+sp_web0_tif <- glue("{dir_derived}/sp_web_0.tif")
+sp_web_tif  <- glue("{dir_derived}/sp_web.tif")
+
+r_sa0 <- rast(sa_web0_tif)
+# dimensions  : 65574, 65536, 1  (nrow, ncol, nlyr)
+# resolution  : 611.4962, 611.4962  (x, y)
+# extent      : -20037508, 20037508, -20049127, 20049127
+
+r_rgns <- oh_rast("region", web_version=T)
+# dimensions  : 5888, 11776, 1  (nrow, ncol, nlyr)
+# resolution  : 611.4962, 611.4962  (x, y)
+# extent      : -14401959, -7200980, 2661232, 6261721
+
+r_sa <- r_sa0 |> 
+  crop(r_rgns) |> 
+  mask(r_rgns)
+plot(r_sa)
+compareGeom(r_sa, r_rgns)
+range(values(r_sa, na.rm=T)) # 1279  536,534
+write_rast(
+  r_sa, sa_web_tif,
+  datatype="INT4U", overwrite=T,
+  use_gdal_cog = T)
+
+# TODO: next, fix duplicate r_sa == r_sp
+(rng_sa <- range(values(r_sa, na.rm=T)))
+# 1279  536,534
+
+# redo in ipynb with:
+# ee.batch.Export.image.toCloudStorage(
+#     im_aphia_sa,
+#     description    = 'gee_sa_web',
+#     ...,
+#     shardSize      = 512,
+#     skipEmptyTiles = True,
+#     formatOptions  = {
+#         'cloudOptimized': True})
+sa_web_gcs <- "gs://offhab_lyrs/gee_sa_web.tif"
+gcs_update_object_acl(
+  basename(sa_web_gcs), entity_type = "allUsers")
+cog_lyrs_url <- "/vsicurl/https://storage.googleapis.com/offhab_lyrs"
+sa_web_cog <- glue("{cog_lyrs_url}/{basename(sa_web_gcs)}")
+r_sa <- rast(sa_web_cog)  # plot(r_sa)
+r_sa <- r_sa |> 
+  crop(r_rgns) |> 
+  mask(r_rgns)
+stopifnot(compareGeom(r_sa, r_rgns))
+(rng_sa <- range(values(r_sa, na.rm=T))) # 1,281  536,538
+write_rast(
+  r_sa, sa_web_tif,
+  datatype="INT4U", overwrite=T,
+  use_gdal_cog = T)
+upload_to_gcs(sa_web_tif)
+oh_map_cog(
+  cog_file  = basename(sa_web_tif),
+  cog_range = rng_sa,
+  title     = "Abundance")
+
+r_sp0 <- rast(sp_web0_tif) #  plot(r_sp)
+r_sp <- r_sp0 |> 
+  crop(r_rgns) |> 
+  mask(r_rgns) 
+stopifnot(compareGeom(r_sp, r_rgns))
+(rng_sp <- range(values(r_sp, na.rm=T))) # 30  6,137
+write_rast(
+  r_sp, sp_web_tif,
+  datatype="INT2U", overwrite=T,
+  use_gdal_cog = T)
+
+
+
+oh_map_cog(
+  cog_file  = basename(sp_web_tif),
+  cog_range = rng_sp,
+  title     = "Presence")
+
+
+
+
+
+
+# TODO: write to db lyrs: range(values) and trimmed bbox
+
+# TODO: crop and mask in GEE before export to GCS
+
+# TODO: crop and mask in offhabr::write_rast() to _web.tif 
+# reference ----
+# write_rast(r_sa, datatype = "INT4S", web_optimize = F)
+# write_rast(r_sp, datatype = "INT4S", web_optimize = F)
+
+```
+
+
+```{r}
+# TODO: check gee_sa_web.tif on GCS
+'gee_sa_web.tif'
+```
+
+
+```{r TODO register lyrs without aphia_id}
+dbDisconnect(con, shutdown = T)
+con <- oh_con(read_only = F)
+
+d_lyrs_notaphia <- tbl(con, "lyrs") |> 
+  filter(is.na(aphia_id)) |> 
+  collect()
+dbExecute(
+  con, 
+  glue(
+    "UPDATE lyrs
+    SET is_ds_prime = TRUE 
+    WHERE aphia_id IS NULL"))
+
+dbDisconnect(con, shutdown = T)
+```
+
+
+

@@ -187,8 +187,7 @@ write_csv(d_r, here("data/zonal_study.csv"))
 d_lyrs_notaphia <- tbl(con, "lyrs") |> 
   filter(is.na(aphia_id)) |> 
   collect()
-
-View(d_lyrs_notaphia)
+# View(d_lyrs_notaphia)
 
 for (lyr_key in names(s_web)){ # lyr_key = names(s_web)[2]
   
@@ -213,6 +212,36 @@ for (lyr_key in names(s_web)){ # lyr_key = names(s_web)[2]
   dbExecute(con, "DELETE FROM lyrs WHERE lyr_key == '{lyr_key}'")
   DBI::dbAppendTable(con, "lyrs", d)
 }
+```
+
+```{r add taxa_wm info where missing aphia_id}
+d_aphias_missing <- tbl(con, "lyrs") |> 
+  filter(
+    !is.na(aphia_id),
+    is_ds_prime) |> 
+  select(aphia_id) |> 
+  anti_join(
+    tbl(con, "taxa_wm"),
+    by = "aphia_id") |> 
+  collect() |> 
+  wm_rest(aphia_id, operation = "AphiaRecordsByAphiaIDs")
+
+# check not missing any fields or values
+flds_d  <- colnames(d_aphias_missing)
+flds_db <- colnames(tbl(con, "taxa_wm"))
+stopifnot(all(
+  length(setdiff(flds_d, flds_db)) == 0,
+  length(setdiff(flds_db, flds_d)) == 0),
+  sum(is.na(d_aphias_missing$kingdom)))
+
+dbAppendTable(
+  con, "taxa_wm",
+  d_aphias_missing)
+```
+
+
+```{r dbDisconnect}
+dbDisconnect(con, shutdown=T)
 ```
 
 

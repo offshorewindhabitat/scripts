@@ -20,7 +20,7 @@ $$
 ```{r pkgs & db con}
 library(librarian)
 shelf(
-  DBI, devtools, dplyr, fs, glue, here, readr, scales, terra)
+  DBI, devtools, dplyr, fs, glue, here, readr, scales, stringr, terra)
 load_all("../offhabr")
 
 con <- oh_con(read_only = F) # dbDisconnect(con, shutdown = T)
@@ -162,32 +162,58 @@ if (!overwrite_gcs){
 sapply(tifs_for_gcs, upload_to_gcs)
 ```
 
-```{r get zonal stats on all lyrs for blocks, zones, regions, study}
+```{r get zonal stats on all lyrs for blocks zones regions & study}
 web_tifs <- fs::dir_ls(dir_derived, glob="*web*.tif")
 s_web <- rast(web_tifs)
 names(s_web) <- basename(web_tifs) |> path_ext_remove()
 
 r_b <- oh_rast(type = "block_id", zone_version = 1, web_version = T)
-d_b <- zonal(
-  s_web,
-  r_b) |> 
-  tibble()
+d_b <- zonal(s_web, r_b, "mean", na.rm=T) |> tibble()
 write_csv(d_b, here("data/zonal_blocks.csv"))
 
 r_z <- oh_rast(type = "zone_id", zone_version = 1, web_version = T)
-d_z <- zonal(
-  s_web,
-  r_z) |> 
-  tibble()
+d_z <- zonal(s_web, r_z, "mean", na.rm=T) |> tibble()
 write_csv(d_z, here("data/zonal_zones.csv"))
 
 r_r <- oh_rast(type = "region", zone_version = 1, web_version = T)
-d_r <- zonal(
-  s_web,
-  r_r) |> 
-  tibble()
+d_r <- zonal(s_web, r_r, "mean", na.rm=T) |> tibble()
 write_csv(d_r, here("data/zonal_regions.csv"))
 
+d_g <- global(s_web, "mean", na.rm=T) |> tibble()
+write_csv(d_r, here("data/zonal_study.csv"))
 ```
+
+```{r get min/max into db for all layers to oh_map_cog()}
+d_lyrs_notaphia <- tbl(con, "lyrs") |> 
+  filter(is.na(aphia_id)) |> 
+  collect()
+
+View(d_lyrs_notaphia)
+
+for (lyr_key in names(s_web)){ # lyr_key = names(s_web)[2]
+  
+  path_tif = glue("{dir_derived}/{lyr_key}.tif")
+  stopifnot(file.exists(path_tif))
+  
+  r   <- rast(path_tif)
+  rng <- range(values(r, na.rm=T))
+  
+  message(glue("{lyr_key} [{paste(rng, collapse=',')}] "))
+  
+  d <- tibble(
+    path_tif    = path_tif,
+    lyr_key     = lyr_key,
+    ds_key      = lyr_key |> 
+      str_remove("_web") |> 
+      str_remove("_rescaled"),
+    val_min     = rng[1],
+    val_max     = rng[2],
+    is_ds_prime = TRUE)
+  
+  dbExecute(con, "DELETE FROM lyrs WHERE lyr_key == '{lyr_key}'")
+  DBI::dbAppendTable(con, "lyrs", d)
+}
+```
+
 
 

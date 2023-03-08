@@ -405,9 +405,61 @@ tifs_for_gcs <- d |> filter(!tif_on_gcs) |> pull(path_tif)
 sapply(tifs_for_gcs, upload_to_gcs)
 ```
 
+```{r update lyrs with val_min val_max bbox}
+librarian::shelf(
+  progress, sf, terra)
+
+sql <- "
+  UPDATE lyrs 
+  SET 
+    val_min = 1,
+    val_max = 100
+  WHERE 
+    (val_min IS NULL OR 
+     val_max IS NULL) AND
+    aphia_id IS NOT NULL"
+dbExecute(con, sql)
+
+dbExecute(con, "ALTER TABLE lyrs DROP COLUMN bbox")
+dbExecute(con, "ALTER TABLE lyrs ADD COLUMN bbox REAL[]")
+
+d_lyrs <- tbl(con, "lyrs") |> 
+  filter(is_ds_prime == TRUE) |> 
+  collect()
+
+pb <- progress_bar$new(
+  format = " updating [:bar] :current/:total :percent in :elapsed; eta: :eta",
+  total = nrow(d_lyrs))
+for (i in 1:nrow(d_lyrs)){
+  pb$tick()
+  lyr_key  <- d_lyrs$lyr_key[i] # am_100832
+  path_tif <- d_lyrs$path_tif[i]
+  bb <- rast(path_tif) |> 
+    trim() |> 
+    ext() |>  # (xmin, xmax, ymin, ymax)
+    st_bbox() |> # xmin      ymin      xmax      ymax
+    st_as_sfc() |> 
+    st_set_crs(3857) |> 
+    st_transform(4326) |> 
+    st_bbox() |> 
+    as.numeric()
+  # leaflet::fitBounds() # lng1, lat1, lng2, lat2
+  
+  sql <- glue("
+  UPDATE lyrs 
+  SET 
+    bbox = ([{paste(bb, collapse=',')}]),
+  WHERE 
+    lyr_key     = '{lyr_key}' AND
+    is_ds_prime = TRUE") # ; cat(sql)
+  dbExecute(con, sql)
+}
+
+```
+
 
 ```{r dbDisconnect}
-dbDisconnect(con, shutdown=T)
+dbDisconnect(con, shutdown=T) # con <- oh_con(read_only = F)
 ```
 
 

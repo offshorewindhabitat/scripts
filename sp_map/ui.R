@@ -1,17 +1,13 @@
 shinyUI(fluidPage(
 
-  titlePanel("OffHab Species Maps"),
+  titlePanel("Offshore Habitat Species Map"),
 
-  sidebarLayout(
+  tags$head(tags$link(rel="stylesheet", type="text/css", href="styles.css")),
 
-    sidebarPanel(
-      selectInput(
-        "sel_sp",
-        "Species",
-        d_gcs_spp$scientificname) ),
+  fluidRow(
+    column(12,
 
-    mainPanel(
-      leafletOutput("map") )
+      selectizeInput("sel_sp", "Species", NULL, width="100%"),
 
-    )
+      leafletOutput("map") ))
 ))

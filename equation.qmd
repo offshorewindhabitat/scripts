@@ -459,7 +459,8 @@ for (i in 1:nrow(d_lyrs)){
 ```{r update all lyrs to public in gcs}
 Sys.setenv(
   "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
-  "GCS_AUTH_FILE"      = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+  # "GCS_AUTH_FILE"      = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+  "GCS_AUTH_FILE"      = "/share/offhab-google-service-account_09e7228ac965.json")
 library(googleCloudStorageR)
 
 tifs <- tbl(con, "lyrs") |> 

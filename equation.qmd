@@ -454,9 +454,24 @@ for (i in 1:nrow(d_lyrs)){
     is_ds_prime = TRUE") # ; cat(sql)
   dbExecute(con, sql)
 }
-
 ```
 
+```{r update all lyrs to public in gcs}
+Sys.setenv(
+  "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
+  "GCS_AUTH_FILE"      = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+library(googleCloudStorageR)
+
+tifs <- tbl(con, "lyrs") |> 
+  filter(is_ds_prime == T) |> 
+  collect() |> 
+  mutate(
+    base_tif = basename(path_tif)) |> 
+  pull(base_tif)
+
+# make all layers public
+sapply(tifs, gcs_update_object_acl, entity_type = "allUsers")
+```
 
 ```{r dbDisconnect}
 dbDisconnect(con, shutdown=T) # con <- oh_con(read_only = F)

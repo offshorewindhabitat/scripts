@@ -23,14 +23,14 @@ shelf(
   DBI, devtools, dplyr, fs, glue, here, readr, scales, stringr, terra)
 load_all("../offhabr")
 
+dir_derived <- "/Users/bbest/My Drive/projects/offhab/data/derived"
+dir_raw     <- "/Users/bbest/My Drive/projects/offhab/data/raw"
+
 con <- oh_con(read_only = F) # dbDisconnect(con, shutdown = T)
 # dbListTables(con)
 ```
 
 ```{r get non-aphia lyrs}
-dir_derived <- "/Users/bbest/My Drive/projects/offhab/data/derived"
-dir_raw     <- "/Users/bbest/My Drive/projects/offhab/data/raw"
-
 d_lyrs <- tbl(con, "lyrs") |> 
   filter(
     is_ds_prime,
@@ -379,6 +379,30 @@ zone_key <- "mda"
 m <- oh_map_zone_score_dev(zone_key)
 attr(m, "zone_name") # Mid Atlantic
 m
+```
+
+```{r ensure all spp layers are on gcs}
+Sys.setenv(
+  "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
+  "GCS_AUTH_FILE"      = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+library(googleCloudStorageR)
+
+gcs_objects  <- gcs_list_objects()
+
+d <- tbl(con, "lyrs") |> 
+  filter(is_ds_prime) |> 
+  collect() |> 
+  mutate(
+    tif         = path_file(path_tif),
+    path_is_lyr = path_ext_remove(tif) == lyr_key,
+    tif_on_gcs  = tif %in% gcs_objects$name)
+stopifnot(sum(!d$path_is_lyr)==0)
+table(d$tif_on_gcs)
+# FALSE  TRUE 
+#   137  9941
+
+tifs_for_gcs <- d |> filter(!tif_on_gcs) |> pull(path_tif)
+sapply(tifs_for_gcs, upload_to_gcs)
 ```
 
 

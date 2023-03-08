@@ -4,7 +4,10 @@ shinyServer(function(input, output, session) {
   output$map <- renderLeaflet({
     req(input$sel_sp)
 
-    oh_map_cog_sp(aphia_id = as.integer(input$sel_sp), con = con)
+    oh_map_cog_sp(
+      aphia_id = as.integer(input$sel_sp),
+      con = con,
+      cog_opacity = 0.8)
   })
 
   # sel_sp: from URL ----

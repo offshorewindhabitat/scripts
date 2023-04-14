@@ -1,10 +1,12 @@
+if (!"librarian" %in% installed.packages())
+  install.packages("librarian")
 librarian::shelf(
   # glue, here, googleCloudStorageR, htmltools, readr, sf, tidyr, stringr
   dplyr, fs, leaflet,
   ecoquants/offhabr,
   shiny)
-# devtools::install_local("/share/github/ecoquants/offhabr", force = T)
-# devtools::load_all("/share/github/ecoquants/offhabr")
+# devtools::install_local(here::here("../offhabr"), force = T)
+# devtools::load_all(here::here("../offhabr"))
 
 con <- oh_con() # dbDisconnect(con, shutdown=TRUE)
 

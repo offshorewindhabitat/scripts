@@ -474,9 +474,54 @@ tifs <- tbl(con, "lyrs") |>
 sapply(tifs, gcs_update_object_acl, entity_type = "allUsers")
 ```
 
-```{r dbDisconnect}
-dbDisconnect(con, shutdown=T) # con <- oh_con(read_only = F)
+```{r update taxa_wm with vernacular}
+librarian::shelf(
+  purrr, worrms)
+
+taxa_wm <- tbl(con, "taxa_wm") |> 
+  collect()
+
+get_vernacular_from_aphia <- function(aphia_id, lang = "English"){
+  # lang = "English"
+  # aphia_id = 156806 # works
+  # aphia_id = 282884 # works multiple
+  # aphia_id = 392274 # does not work
+  # aphia_id = 382946 # length = 0?
+  # message(glue("aphia_id: {aphia_id}"))
+  y <- try(
+    worrms::wm_common_id(id = aphia_id) |> 
+      filter(language == lang) |> 
+      tail(1L) |> 
+      pull(vernacular), silent = T)
+  if ("try-error" %in% class(y) | length(y) == 0)
+    y <- NA
+  y
+}
+
+taxa_wm2 <- taxa_wm |> 
+  # head() |> 
+  # rowwise() |> 
+  mutate(
+    vernacular = map_chr(
+      aphia_id, get_vernacular_from_aphia,
+      .progress = T))
+
+# taxa_wm2 |> 
+#   select(aphia_id, scientificname, vernacular)
+
+# table(is.na(taxa_wm2$vernacular))
+# FALSE  TRUE 
+#  4158  6145
+
+dbWriteTable(con, "taxa_wm", taxa_wm2, overwrite = T)
+```
+
+```{r update taxa_wm.class}
+# TODO
+
 ```
 
 
-
+```{r dbDisconnect}
+dbDisconnect(con, shutdown=T) # con <- oh_con(read_only = F)
+```

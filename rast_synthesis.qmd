@@ -11,8 +11,8 @@ editor_options:
 librarian::shelf(
   devtools, dplyr, DT, fs, glue, googleCloudStorageR, leaflet, multidplyr, 
   progress, purrr, readr, sf, stringr, terra, tibble, tidyr, units)
-load_all("~/Github/ecoquants/offhabr")
-# devtools::install_local("~/Github/ecoquants/offhabr", force=T)
+load_all("~/Github/offshorewindhabitat/offhabr")
+# devtools::install_local("~/Github/offshorewindhabitat/offhabr", force=T)
 if (packageVersion("leaflet") <= "2.1.1")
   warning("terra::plet() requires leaflet > 2.1.1")
 
@@ -101,8 +101,8 @@ tif_to_cogs <- function(in_tif, redo=F, upload_to_gcs=F){
   TRUE
 }
 
-load_all("~/Github/ecoquants/offhabr")
-# devtools::install_local("~/Github/ecoquants/offhabr", force=T)
+load_all("~/Github/offshorewindhabitat/offhabr")
+# devtools::install_local("~/Github/offshorewindhabitat/offhabr", force=T)
 
 Sys.setenv(
   "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
@@ -367,8 +367,8 @@ offhabr::oh_zones_s1k |>
 ## Block stats, run in batches of 100
 
 ```{r}
-load_all("~/Github/ecoquants/offhabr")
-# devtools::install_local("~/Github/ecoquants/offhabr", force=T)
+load_all("~/Github/offshorewindhabitat/offhabr")
+# devtools::install_local("~/Github/offshorewindhabitat/offhabr", force=T)
 
 # dir_lyrs <- "/Users/bbest/My Drive/projects/offhab/data/archive/lyrs_ds_sp_cog"
 #   DOH! these layers have wrong dimensions
@@ -596,8 +596,8 @@ dbDisconnect(con, shutdown=T)
 ## Block stats, individual extract
 
 ```{r}
-# load_all("~/Github/ecoquants/offhabr")
-# devtools::install_local("~/Github/ecoquants/offhabr", force=T)
+# load_all("~/Github/offshorewindhabitat/offhabr")
+# devtools::install_local("~/Github/offshorewindhabitat/offhabr", force=T)
 r_b_v1 <- oh_rast("block_id", zone_version = 1)
 
 dir_zs_b <- "/Users/bbest/My Drive/projects/offhab/data/derived/zonal_stats"
@@ -933,7 +933,7 @@ d_z <- d_z %>%
       as.integer())
 
 
-devtools::load_all("~/Github/ecoquants/offhabr")
+devtools::load_all("~/Github/offshorewindhabitat/offhabr")
 con <- oh_con() # dbDisconnect(con, shutdown=T)
 DBI::dbListTables(con)
 
@@ -1114,7 +1114,7 @@ r_pres_z8_tif <- glue("{dir_tif}/r_presence_z8.tif")
 # stk <- rast(d$path_tif[1:10])
 # stk <- rast(d$path_tif)
 
-devtools::load_all("~/Github/ecoquants/offhabr")
+devtools::load_all("~/Github/offshorewindhabitat/offhabr")
 
 con <- oh_con(read_only=T)
 

@@ -19,12 +19,12 @@ knitr::opts_chunk$set(
 
 ```{r}
 librarian::shelf(
-  # ecoquants/offhabr,
+  # offshorewindhabitat/offhabr,
   r-spatial/mapview, # dev mapview works with terra, per https://github.com/r-spatial/mapview/pull/435
   DBI, dplyr, DT, exactextractr, leaflet, leaflet.extras, mapview, 
   scales, sf, tibble, terra, zeallot,
   quiet = T)
-devtools::load_all("~/Github/ecoquants/offhabr")
+devtools::load_all("~/Github/offshorewindhabitat/offhabr")
 select = dplyr::select
 ```
 
@@ -159,7 +159,7 @@ b_nspp %>%
 ## Species Richness per Zone with Blocks
 
 ```{r}
-devtools::load_all("~/Github/ecoquants/offhabr")
+devtools::load_all("~/Github/offshorewindhabitat/offhabr")
 zkeys <- oh_zones %>% 
   filter(
     zone_key %in% unique(b_nspp$zone_key)) %>% 

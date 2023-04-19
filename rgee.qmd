@@ -570,7 +570,7 @@ librarian::shelf(
   devtools, mapview, 
   # rgee, 
   raster, sf, terra)
-load_all("~/Github/ecoquants/offhabr")
+load_all("~/Github/offshorewindhabitat/offhabr")
 load_all("~/Github/bbest/rgee")
 ee_Initialize(gcs = TRUE)
 
@@ -602,11 +602,11 @@ librarian::shelf(
   # rgee, 
   sf, stringr, terra, tidyrgee)
 load_all("~/Github/bbest/rgee")
-load_all("~/Github/ecoquants/offhabr")
+load_all("~/Github/offshorewindhabitat/offhabr")
 ee_Initialize(gcs = T, quiet = F)
 
 for (v in 1:2){ # v=2
-  z_tif     <- glue("~/Github/ecoquants/offhabr/inst/oh_zones_v{v}.tif")
+  z_tif     <- glue("~/Github/offshorewindhabitat/offhabr/inst/oh_zones_v{v}.tif")
   #gs_uri   <- glue("gs://offhab_lyrs/oh_zones_v{v}.tif")
   ee_id     <- glue("projects/ee-offhab/assets/im_zones_v{v}")
   gs_bucket <- "offhab_lyrs"

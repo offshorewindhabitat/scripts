@@ -275,7 +275,7 @@ r_zones_v1_web <- offhabr::oh_rast(
   "zone_id", zone_version = 1, web_version=T) 
   # plot(r_zones_v1_web)
 
-dir_inst <- "/Users/bbest/Github/ecoquants/offhabr/inst"
+dir_inst <- "/Users/bbest/Github/offshorewindhabitat/offhabr/inst"
 oh_zones_v1_web_tif <- glue("{dir_inst}/oh_zones_v1_web.tif")
 stopifnot(file.exists(oh_zones_v1_web_tif))
 upload_to_gcs(oh_zones_v1_web_tif)

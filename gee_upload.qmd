@@ -69,7 +69,7 @@ Need to explicitly set `EPSG:3857` with updated `write_rast()`.
 ```{r}
 librarian::shelf(
   dplyr, fs, purrr, stringr, terra)
-devtools::load_all("~/Github/ecoquants/offhabr")
+devtools::load_all("~/Github/offshorewindhabitat/offhabr")
 
 dir_tif  <- "/Users/bbest/My Drive/projects/offhab/data/_oh_rast0to100"
 dir_lyrs <- "/Users/bbest/My Drive/projects/offhab/data/_lyrs"

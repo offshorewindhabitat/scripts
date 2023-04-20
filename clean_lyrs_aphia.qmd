@@ -10,12 +10,12 @@ library(librarian)
 shelf(
   DBI, devtools, dplyr, fs, glue, here, terra)
 load_all("../offhabr")
+
+con <- oh_con() # dbDisconnect(shutdown = T)
+# dbListTables(con)
 ```
 
 ```{r get prime lyrs}
-con <- oh_con() # dbDisconnect(shutdown = T)
-# dbListTables(con)
-
 dir_derived    <- "/Users/bbest/My Drive/projects/offhab/data/derived"
 
 d_lyrs <- tbl(con, "lyrs") |> 
@@ -440,6 +440,83 @@ dbExecute(
 
 dbDisconnect(con, shutdown = T)
 ```
+
+
+## cleanup layer files
+
+```{r}
+d_lyrs <- tbl(con, "lyrs") |> 
+  filter(
+    is_ds_prime | is.na(aphia_id)) |> 
+  collect()
+
+# table(is.na(d_lyrs$aphia_id))
+# FALSE  TRUE 
+# 10061    17
+
+table(dirname(d_lyrs$path_tif))
+#          /Users/bbest/My Drive/projects/offhab/data/derived 
+#                                                          14 
+#  /Users/bbest/My Drive/projects/offhab/data/derived/lyrs_oh 
+#                                                          41 
+# /Users/bbest/My Drive/projects/offhab/data/derived/lyrs_tif 
+#                                                       10023
+
+dir_derived <- "/Users/bbest/My Drive/projects/offhab/data/derived"
+glue("")
+
+dir_fs <- glue("{dir_derived}/lyrs_tif")
+tifs_fs <- list.files(dir_fs, "\\.tif", full.names = T)
+tifs_db <- d_lyrs |> 
+  filter(dirname(path_tif) == dir_fs) |> 
+  pull(path_tif)
+stopifnot(length(setdiff(tifs_db, tifs_fs)) == 0)
+setdiff(tifs_fs, tifs_db)
+
+# actually files not too big, except raw/
+```
+
+## cleanup GCS
+
+```{r}
+# get objects in GCS
+Sys.setenv(
+  "GCS_DEFAULT_BUCKET" = "offhab_lyrs",
+  "GCS_AUTH_FILE"      = "/Users/bbest/My Drive/private/offhab-google-service-account_09e7228ac965.json")
+library(googleCloudStorageR)
+
+gcs_objects <- gcs_list_objects() |> tibble()
+nrow(gcs_objects) # 43,977 -> 10,077 # ~ $0.10/month
+
+gcs_dir = "https://storage.googleapis.com/offhab_lyrs"
+d_lyrs <- d_lyrs |> 
+  mutate(
+    lyr_tif = glue("{lyr_key}.tif"))
+
+x <- intersect(d_lyrs$lyr_tif, gcs_objects$name)
+stopifnot(setdiff(d_lyrs$lyr_tif, gcs_objects$name)==0)
+gcs_tifs_rm <- setdiff(gcs_objects$name, d_lyrs$lyr_tif)
+length(gcs_tifs_rm) # 33,904
+
+res <- sapply(gcs_tifs_rm, gcs_delete_object)
+
+library(stringr)
+gcs_objects <- gcs_objects |> 
+  mutate(
+    size_kb = case_when(
+      str_detect(size, " Kb") ~ 
+        str_replace(size, " Kb", "") |> as.numeric(),
+      str_detect(size, " Mb") ~ 
+        str_replace(size, " Mb", "") |> as.numeric() * 1000,
+      TRUE ~ NA)) |> 
+  arrange(desc(size_kb))
+gcs_objects
+
+length(gcs_objects$size_kb)     # 10,077 objects
+sum(gcs_objects$size_kb) / 1000 #    560 MB
+```
+
+
 
 
 

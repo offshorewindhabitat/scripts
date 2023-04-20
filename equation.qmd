@@ -514,6 +514,7 @@ taxa_wm2 <- taxa_wm |>
 #  4158  6145
 
 dbWriteTable(con, "taxa_wm", taxa_wm2, overwrite = T)
+# dbDisconnect(con, shutdown = T)
 ```
 
 ```{r update taxa_wm.class}

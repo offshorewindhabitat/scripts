@@ -11,3 +11,4 @@ These web pages (\*.html) are typically rendered in this repository from Rmarkdo
 * [{{ file.basename }}]({{ site.baseurl }}{{ file.path }})
   {% endif %}
 {% endfor %}
+

@@ -32,4 +32,10 @@ shinyServer(function(input, output, session) {
       d_spp$taxa_hierarchy),
     server = TRUE)
 
+  # url: update from sel_sp
+  observe({
+    req(input$sel_sp)
+    updateQueryString(glue("?aphia_id={input$sel_sp}"))
+  })
+
 })

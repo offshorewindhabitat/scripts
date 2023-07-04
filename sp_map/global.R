@@ -1,6 +1,7 @@
 # R packages (to deploy on ShinyApps.io)
 library(dplyr)
 library(fs)
+library(glue)
 library(leaflet)
 library(leaflet.extras)
 library(offhabr)  # remotes::install_github("offshorewindhabitat/offhabr", force = T)

@@ -35,6 +35,11 @@ shinyServer(function(input, output, session) {
   # url: update from sel_sp
   observe({
     req(input$sel_sp)
+    sp_sci <- d_spp |>
+      filter(aphia_id==input$sel_sp) |>
+      pull(scientificname)
+
+    change_window_title(session, glue("{sp_sci} - Offshore Habitat Species Map"))
     updateQueryString(glue("?aphia_id={input$sel_sp}"))
   })
 

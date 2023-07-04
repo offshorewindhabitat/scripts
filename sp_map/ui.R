@@ -1,6 +1,7 @@
 shinyUI(fluidPage(
 
   titlePanel("Offshore Habitat Species Map"),
+  use_shiny_title(),
 
   tags$head(tags$link(rel="stylesheet", type="text/css", href="styles.css")),
 

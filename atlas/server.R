@@ -51,11 +51,17 @@ shinyServer(function(input, output, session) {
     #   ifelse(is.na(x), "gray", "blue")
     # }
 
-    leaflet() %>%
+    leaflet() |>
+      # add base: blue bathymetry and light brown/green topography
       addProviderTiles(
-        providers$Esri.OceanBasemap,
+        "Esri.OceanBasemap",
         options = providerTileOptions(
-          opacity = 0.5)) %>%
+          variant = "Ocean/World_Ocean_Base")) |>
+      # add reference: placename labels and borders
+      addProviderTiles(
+        "Esri.OceanBasemap",
+        options = providerTileOptions(
+          variant = "Ocean/World_Ocean_Reference")) |>
       addPolygons(
         data = ply_brgns, layerId = as.vector(ply_brgns$brgn),
         color = "gray", opacity = 0.7, weight = 1,

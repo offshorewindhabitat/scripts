@@ -123,7 +123,7 @@ r_ve   <- sc(stk["ve"]) # HydrothermalVents: binary converts to 0.5
 r_sm   <- sc(stk["sm"]) # Seamounts:         binary converts to 0.5
 
 # score_v1: all weights == 1
-r_score_v1 <- sc(sum(r_sa, r_sp, r_er, r_vg, r_ve, r_sm, na.rm = T)) * 100 |> as.int()
+r_score_v1 <- (sc(sum(r_sa, r_sp, r_er, r_vg, r_ve, r_sm, na.rm = T)) * 100) |> as.int()
 # plet(r_score_v1, tiles=providers$CartoDB.Positron)
 write_rast(
   r_score_v1,
@@ -163,11 +163,14 @@ sapply(tifs_for_gcs, upload_to_gcs)
 ```
 
 ```{r get zonal stats on all lyrs for blocks zones regions & study}
-web_tifs <- fs::dir_ls(dir_derived, glob="*web*.tif")
+web_tifs <- fs::dir_ls(dir_derived, glob="*web*.tif") |> 
+  str_subset("stack_web.tif", negat=T)
 s_web <- rast(web_tifs)
 names(s_web) <- basename(web_tifs) |> path_ext_remove()
 
+load_all("~/Github/offshorewindhabitat/offhabr")
 r_b <- oh_rast(type = "block_id", zone_version = 1, web_version = T)
+# plet(r_b, tiles=providers$CartoDB.DarkMatter)
 d_b <- zonal(s_web, r_b, "mean", na.rm=T) |> tibble()
 write_csv(d_b, here("data/zonal_blocks.csv"))
 
